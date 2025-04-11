@@ -3,88 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thank You - Baby Prediction</title>
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <title>Thank You!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Comic Neue', cursive;
-      background: url('https://images.unsplash.com/photo-1607746882042-944635dfe10e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      font-family: 'Fredoka One', cursive;
+      background: url('https://your-correct-image-link-here.jpg') no-repeat center center fixed;
       background-size: cover;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      margin: 0;
-      color: #333;
+      text-align: center;
     }
     .thankyou-box {
       background: #ffffffcc;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      text-align: center;
-      animation: pop 1s ease forwards;
+      padding: 3rem;
+      border-radius: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      max-width: 600px;
     }
     h1 {
+      font-size: 3rem;
       color: #ff6f61;
-      font-size: 2.5rem;
+      margin-bottom: 1rem;
     }
     p {
-      font-size: 1.2rem;
-      margin-top: 1rem;
+      font-size: 1.5rem;
+      color: #555;
     }
-    @keyframes pop {
-      from { transform: scale(0.8); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    .emoji {
+      font-size: 4rem;
+      margin: 1rem 0;
+      animation: bounceEmoji 1.5s infinite;
     }
-    .confetti-piece {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: #ff6f61;
-      opacity: 0.7;
-      animation: fall 3s linear infinite;
+    @keyframes bounceEmoji {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
     }
-    .confetti {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 10;
-    }
-    @keyframes fall {
-      to { transform: translateY(100vh) rotate(360deg); }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+      p {
+        font-size: 1.2rem;
+      }
+      .emoji {
+        font-size: 3rem;
+      }
     }
   </style>
 </head>
 <body>
 
-<div class="confetti" id="confetti"></div>
-
 <div class="thankyou-box">
-  <h1>🎉 Thank You!</h1>
-  <p>We can't wait to reveal everything after the baby arrives! 👶❤️</p>
-<p>winner gets a surprise gift from the new parents 👶❤️</p>
+  <div class="emoji">👶💌</div>
+  <h1>Thank You!</h1>
+  <p>Your predictions and suggestions have been recorded.<br>We can't wait to meet Baby Kapil & Monika! ✨</p>
+  <p>The Winner gets a surpirse gift from the new parents ✨</p>
 </div>
-
-<script>
-  // Create falling confetti
-  function createConfetti() {
-    const confetti = document.getElementById('confetti');
-    for (let i = 0; i < 50; i++) {
-      const piece = document.createElement('div');
-      piece.classList.add('confetti-piece');
-      piece.style.left = Math.random() * 100 + 'vw';
-      piece.style.animationDuration = 2 + Math.random() * 3 + 's';
-      piece.style.background = `hsl(${Math.random() * 360}, 70%, 80%)`;
-      confetti.appendChild(piece);
-    }
-  }
-  createConfetti();
-</script>
 
 </body>
 </html>
