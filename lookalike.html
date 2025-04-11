@@ -4,14 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baby Lookalike Prediction</title>
-  <link rel="icon" href="https://emojiapi.dev/api/v1/baby/64.png" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Comic Neue', cursive;
-      background: url('https://github.com/KM2567/Kapil-MonikaBabyprediction/blob/main/WhatsApp%20Image%202025-04-11%20at%2016.47.49.jpeg?raw=true') no-repeat center center fixed;
+      font-family: 'Fredoka One', cursive;
+      background: url('https://your-correct-image-link-here.jpg') no-repeat center center fixed;
       background-size: cover;
-      color: #333;
       margin: 0;
       padding: 1rem;
       display: flex;
@@ -19,8 +17,8 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      overflow-x: hidden;
       font-size: 20px;
+      color: #333;
     }
     header {
       text-align: center;
@@ -29,10 +27,11 @@
       border-radius: 1rem;
       box-shadow: 0 6px 18px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
+      width: 100%;
+      max-width: 600px;
     }
     header h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+      font-size: 2.5rem;
       color: #ff6f61;
     }
     form {
@@ -43,11 +42,27 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      width: 90%;
+      width: 100%;
       max-width: 400px;
     }
     input, button, label {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
+    }
+    input[type="radio"] {
+      transform: scale(1.8);
+      margin-right: 10px;
+    }
+    .kapil-label {
+      color: #3399ff;
+      font-weight: bold;
+    }
+    .monika-label {
+      color: #ff66cc;
+      font-weight: bold;
+    }
+    .other-label {
+      color: #888;
+      font-weight: bold;
     }
     button {
       background: #ff6f61;
@@ -62,12 +77,26 @@
       background: #ff3b2e;
       transform: scale(1.05);
     }
+    /* Fun wobble animation */
+    input[type="radio"]:checked + label,
+    input[type="radio"]:checked {
+      animation: wobble 0.8s ease forwards;
+    }
+    @keyframes wobble {
+      0% { transform: rotate(0deg); }
+      15% { transform: rotate(5deg); }
+      30% { transform: rotate(-5deg); }
+      45% { transform: rotate(3deg); }
+      60% { transform: rotate(-3deg); }
+      75% { transform: rotate(2deg); }
+      100% { transform: rotate(0deg); }
+    }
     @media (max-width: 600px) {
       body {
         font-size: 22px;
       }
       header h1 {
-        font-size: 2.5rem;
+        font-size: 2rem;
       }
     }
   </style>
@@ -79,10 +108,9 @@
 </header>
 
 <form id="lookalikeForm">
-  <label>Pick one:</label>
-  <label><input type="radio" name="lookalike" value="Kapil" required> Kapil</label>
-  <label><input type="radio" name="lookalike" value="Monika" required> Monika</label>
-  <label><input type="radio" name="lookalike" value="Other" required> Other</label>
+  <label class="kapil-label"><input type="radio" name="lookalike" value="Kapil" required> Kapil 💙</label>
+  <label class="monika-label"><input type="radio" name="lookalike" value="Monika" required> Monika 💖</label>
+  <label class="other-label"><input type="radio" name="lookalike" value="Other" required> Other 💬</label>
 
   <label>If Other, please specify:</label>
   <input type="text" id="otherResemblance" placeholder="Type here if you selected Other">
@@ -91,14 +119,14 @@
 </form>
 
 <script>
-  document.getElementById('lookalikeForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const lookalike = document.querySelector('input[name="lookalike"]:checked').value;
-    const otherResemblance = document.getElementById('otherResemblance').value;
-    localStorage.setItem('lookalike', lookalike);
-    localStorage.setItem('otherResemblance', otherResemblance);
-    window.location.href = 'birthdate.html';
-  });
+document.getElementById('lookalikeForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const lookalike = document.querySelector('input[name="lookalike"]:checked').value;
+  const otherResemblance = document.getElementById('otherResemblance').value;
+  localStorage.setItem('lookalike', lookalike);
+  localStorage.setItem('otherResemblance', otherResemblance);
+  window.location.href = 'birthdate.html';
+});
 </script>
 
 </body>
