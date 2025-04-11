@@ -124,10 +124,10 @@
   <div id="countdown">Countdown loading...</div>
 </header>
 
-<!-- Corrected Formspree Form -->
-<form action="https://formspree.io/f/maneazrr" method="POST">
+<!-- Form to Save Name and Gender -->
+<form id="genderForm">
   <label>Your Name:</label>
-  <input type="text" name="guestName" required placeholder="Enter your name">
+  <input type="text" id="guestName" required placeholder="Enter your name">
 
   <label>Guess the Gender:</label>
   <label class="boy-label">
@@ -137,7 +137,7 @@
     <input type="radio" name="gender" value="Girl" required> Girl
   </label>
 
-  <button type="submit">Submit ➡️</button>
+  <button type="submit">Next ➡️</button>
 </form>
 
 <script>
@@ -163,6 +163,16 @@
     countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left!`;
   }, 1000);
 })();
+
+// Save Name and Gender, then move to lookalike.html
+document.getElementById('genderForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const guestName = document.getElementById('guestName').value;
+  const gender = document.querySelector('input[name="gender"]:checked').value;
+  localStorage.setItem('guestName', guestName);
+  localStorage.setItem('gender', gender);
+  window.location.href = 'lookalike.html'; // Move to next page
+});
 </script>
 
 </body>
