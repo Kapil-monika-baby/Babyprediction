@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
   <!-- Open Graph Meta Tags -->
-<meta property="og:title" content="Kapil & Monika's Baby Prediction Game">
-<meta property="og:description" content="Join us in predicting our baby's gender, lookalike, and arrival date! 🎉👶">
-<meta property="og:image" content="https://i.imgur.com/auiWrAX.jpeg">
-<meta property="og:url" content="https://kapil-monika-baby.github.io/Babyprediction/">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
+  <meta property="og:title" content="Kapil & Monika's Baby Prediction Game">
+  <meta property="og:description" content="Join us in predicting our baby's gender, lookalike, and arrival date! 🎉👶">
+  <meta property="og:image" content="https://i.imgur.com/auiWrAX.jpeg">
+  <meta property="og:url" content="https://kapil-monika-baby.github.io/Babyprediction/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kapil & Monika's Baby Prediction</title>
+
+  <!-- Favicon -->
   <link rel="icon" href="https://emojiapi.dev/api/v1/baby/64.png" type="image/png">
+
+  <!-- Fun Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
+
   <style>
     body {
       font-family: 'Fredoka One', cursive;
@@ -107,30 +112,36 @@
   </style>
 </head>
 <body>
-  <audio controls autoplay loop style="display:none;">
+
+<!-- Background Music -->
+<audio controls autoplay loop style="display:none;">
   <source src="https://baby-prediction-music.s3.amazonaws.com/playful-kids-music.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
-
-
 
 <header>
   <h1>👶 Kapil & Monika's Baby Prediction</h1>
   <div id="countdown">Countdown loading...</div>
 </header>
 
-<form id="genderForm">
+<!-- Corrected Formspree Form -->
+<form action="https://formspree.io/f/maneazrr" method="POST">
   <label>Your Name:</label>
-  <input type="text" id="guestName" required placeholder="Enter your name">
+  <input type="text" name="guestName" required placeholder="Enter your name">
 
   <label>Guess the Gender:</label>
-  <label class="boy-label"><input type="radio" name="gender" value="Boy" required> Boy</label>
-  <label class="girl-label"><input type="radio" name="gender" value="Girl" required> Girl</label>
+  <label class="boy-label">
+    <input type="radio" name="gender" value="Boy" required> Boy
+  </label>
+  <label class="girl-label">
+    <input type="radio" name="gender" value="Girl" required> Girl
+  </label>
 
-  <button type="submit">Next ➡️</button>
+  <button type="submit">Submit ➡️</button>
 </form>
 
 <script>
+// Countdown Timer
 (function() {
   const countdownElement = document.getElementById('countdown');
   const targetDate = new Date('2025-06-05T00:00:00').getTime();
@@ -151,15 +162,6 @@
 
     countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left!`;
   }, 1000);
-
-  document.getElementById('genderForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const guestName = document.getElementById('guestName').value;
-    const gender = document.querySelector('input[name="gender"]:checked').value;
-    localStorage.setItem('guestName', guestName);
-    localStorage.setItem('gender', gender);
-    window.location.href = 'lookalike.html';
-  });
 })();
 </script>
 
