@@ -13,55 +13,123 @@
       background-size: cover;
       color: #333;
       margin: 0;
-      padding: 0;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      overflow-x: hidden;
-      font-size: 18px;
+      font-size: 20px;
     }
     header {
       text-align: center;
       padding: 2rem 1rem;
+      background: #ffffffcc;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
     }
-    header h1 {
-      font-family: 'Comic Neue', cursive;
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-      color: #ff6f61;
+    form {
+      background: #ffffffcc;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 90%;
+      max-width: 400px;
     }
-    header p {
-      font-size: 1.5rem;
-      color: #555;
+    input, button, label {
+      font-size: 1.2rem;
+    }
+    button {
+      background: #ff6f61;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    button:hover {
+      background: #ff3b2e;
+      transform: scale(1.05);
     }
     #countdown {
-      font-size: 1.75rem;
-      margin: 1rem 0;
-      color: #ff6f61;
+      font-size: 1.5rem;
+      margin-top: 1rem;
       background: #fff3e6;
       padding: 0.75rem 1.5rem;
       border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      color: #ff6f61;
     }
     @media (max-width: 600px) {
       body {
-        font-size: 20px;
+        font-size: 22px;
       }
       header h1 {
         font-size: 2.5rem;
       }
       header p {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
       }
       #countdown {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
       }
     }
   </style>
 </head>
 <body>
 
-<!-- rest of your HTML stays same -->
+<header>
+  <h1>👶 Kapil & Monika's Baby Prediction Game!</h1>
+  <p>🎉 Guess and have fun with us!</p>
+  <div id="countdown">Countdown loading...</div>
+</header>
+
+<form id="genderForm">
+  <label for="guestName">Your Name:</label>
+  <input type="text" id="guestName" required placeholder="Enter your name">
+
+  <label>Guess the Gender:</label>
+  <label><input type="radio" name="gender" value="Boy" required> Boy</label>
+  <label><input type="radio" name="gender" value="Girl" required> Girl</label>
+
+  <button type="submit">Next ➡️</button>
+</form>
+
+<script>
+  // Countdown timer
+  const countdown = document.getElementById('countdown');
+  const target = new Date('2025-06-05T00:00:00').getTime();
+  setInterval(() => {
+    const now = new Date().getTime();
+    const distance = target - now;
+
+    if (distance < 0) {
+      countdown.innerHTML = \"🎉 Baby Time! 🎉\";
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    countdown.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left!`;
+  }, 1000);
+
+  // Save to Local Storage and move to next page
+  document.getElementById('genderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const guestName = document.getElementById('guestName').value;
+    const gender = document.querySelector('input[name=\"gender\"]:checked').value;
+    localStorage.setItem('guestName', guestName);
+    localStorage.setItem('gender', gender);
+    window.location.href = 'lookalike.html'; // Move to next page
+  });
+</script>
 
 </body>
 </html>
