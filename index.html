@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kapil & Monika's Baby Prediction Game</title>
+  <title>Kapil & Monika's Baby Prediction</title>
   <link rel="icon" href="https://emojiapi.dev/api/v1/baby/64.png" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Comic Neue', cursive;
-      background: url('https://github.com/KM2567/Kapil-MonikaBabyprediction/blob/main/WhatsApp%20Image%202025-04-11%20at%2016.20.39.jpeg?raw=true') no-repeat center center fixed;
+      font-family: 'Fredoka One', cursive;
+      background: url('https://your-correct-image-link-here.jpg') no-repeat center center fixed;
       background-size: cover;
       color: #333;
       margin: 0;
@@ -17,7 +17,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       min-height: 100vh;
+      overflow-x: hidden;
       font-size: 20px;
     }
     header {
@@ -27,6 +29,22 @@
       border-radius: 1rem;
       box-shadow: 0 6px 18px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #ff6f61;
+    }
+    #countdown {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+      color: #ff6f61;
+      background: #fff3e6;
+      padding: 0.75rem 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     form {
       background: #ffffffcc;
@@ -36,11 +54,23 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      width: 90%;
+      width: 100%;
       max-width: 400px;
     }
     input, button, label {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
+    }
+    input[type="radio"] {
+      transform: scale(1.8);
+      margin-right: 10px;
+    }
+    .boy-label {
+      color: #3399ff;
+      font-weight: bold;
+    }
+    .girl-label {
+      color: #ff66cc;
+      font-weight: bold;
     }
     button {
       background: #ff6f61;
@@ -55,27 +85,15 @@
       background: #ff3b2e;
       transform: scale(1.05);
     }
-    #countdown {
-      font-size: 1.5rem;
-      margin-top: 1rem;
-      background: #fff3e6;
-      padding: 0.75rem 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      color: #ff6f61;
-    }
     @media (max-width: 600px) {
       body {
         font-size: 22px;
       }
       header h1 {
-        font-size: 2.5rem;
-      }
-      header p {
-        font-size: 1.5rem;
+        font-size: 2rem;
       }
       #countdown {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
       }
     }
   </style>
@@ -83,32 +101,32 @@
 <body>
 
 <header>
-  <h1>👶 Kapil & Monika's Baby Prediction Game!</h1>
-  <p>🎉 Guess and have fun with us!</p>
+  <h1>👶 Kapil & Monika's Baby Prediction</h1>
   <div id="countdown">Countdown loading...</div>
 </header>
 
 <form id="genderForm">
-  <label for="guestName">Your Name:</label>
+  <label>Your Name:</label>
   <input type="text" id="guestName" required placeholder="Enter your name">
 
   <label>Guess the Gender:</label>
-  <label><input type="radio" name="gender" value="Boy" required> Boy</label>
-  <label><input type="radio" name="gender" value="Girl" required> Girl</label>
+  <label class="boy-label"><input type="radio" name="gender" value="Boy" required> Boy</label>
+  <label class="girl-label"><input type="radio" name="gender" value="Girl" required> Girl</label>
 
   <button type="submit">Next ➡️</button>
 </form>
 
 <script>
-  // Countdown timer
-  const countdown = document.getElementById('countdown');
-  const target = new Date('2025-06-05T00:00:00').getTime();
+(function() {
+  const countdownElement = document.getElementById('countdown');
+  const targetDate = new Date('2025-06-05T00:00:00').getTime();
+
   setInterval(() => {
     const now = new Date().getTime();
-    const distance = target - now;
+    const distance = targetDate - now;
 
     if (distance < 0) {
-      countdown.innerHTML = \"🎉 Baby Time! 🎉\";
+      countdownElement.innerHTML = "🎉 Baby Time! 🎉";
       return;
     }
 
@@ -117,18 +135,18 @@
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    countdown.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left!`;
+    countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left!`;
   }, 1000);
 
-  // Save to Local Storage and move to next page
   document.getElementById('genderForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const guestName = document.getElementById('guestName').value;
-    const gender = document.querySelector('input[name=\"gender\"]:checked').value;
+    const gender = document.querySelector('input[name="gender"]:checked').value;
     localStorage.setItem('guestName', guestName);
     localStorage.setItem('gender', gender);
-    window.location.href = 'lookalike.html'; // Move to next page
+    window.location.href = 'lookalike.html';
   });
+})();
 </script>
 
 </body>
