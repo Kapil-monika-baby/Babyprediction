@@ -1,0 +1,106 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 AppleColorEmoji;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+  <meta charset="UTF-8">\
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+  <title>Thank You - Baby Prediction</title>\
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">\
+  <style>\
+    body \{\
+      font-family: 'Comic Neue', cursive;\
+      background: url('https://images.unsplash.com/photo-1607746882042-944635dfe10e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;\
+      background-size: cover;\
+      display: flex;\
+      flex-direction: column;\
+      align-items: center;\
+      justify-content: center;\
+      min-height: 100vh;\
+      margin: 0;\
+      color: #333;\
+    \}\
+    .thankyou-box \{\
+      background: #ffffffcc;\
+      padding: 2rem;\
+      border-radius: 1rem;\
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);\
+      text-align: center;\
+      animation: pop 1s ease forwards;\
+    \}\
+    h1 \{\
+      color: #ff6f61;\
+      font-size: 2.5rem;\
+    \}\
+    p \{\
+      font-size: 1.2rem;\
+      margin-top: 1rem;\
+    \}\
+    @keyframes pop \{\
+      from \{ transform: scale(0.8); opacity: 0; \}\
+      to \{ transform: scale(1); opacity: 1; \}\
+    \}\
+    .confetti-piece \{\
+      position: absolute;\
+      width: 10px;\
+      height: 10px;\
+      background: #ff6f61;\
+      opacity: 0.7;\
+      animation: fall 3s linear infinite;\
+    \}\
+    .confetti \{\
+      position: fixed;\
+      top: 0;\
+      width: 100%;\
+      height: 100%;\
+      pointer-events: none;\
+      overflow: hidden;\
+      z-index: 10;\
+    \}\
+    @keyframes fall \{\
+      to \{ transform: translateY(100vh) rotate(360deg); \}\
+    \}\
+  </style>\
+</head>\
+<body>\
+\
+<div class="confetti" id="confetti"></div>\
+\
+<div class="thankyou-box">\
+  <h1>
+\f1 \uc0\u55356 \u57225 
+\f0  Thank You!</h1>\
+  <p>We can't wait to reveal everything after the baby arrives! 
+\f1 \uc0\u55357 \u56438 \u10084 \u65039 
+\f0 </p>\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 <p>winner gets a surprise gift from the new parents 
+\f1 \uc0\u55357 \u56438 \u10084 \u65039 
+\f0 </p>\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 </div>\
+\
+<script>\
+  // Create falling confetti\
+  function createConfetti() \{\
+    const confetti = document.getElementById('confetti');\
+    for (let i = 0; i < 50; i++) \{\
+      const piece = document.createElement('div');\
+      piece.classList.add('confetti-piece');\
+      piece.style.left = Math.random() * 100 + 'vw';\
+      piece.style.animationDuration = 2 + Math.random() * 3 + 's';\
+      piece.style.background = `hsl($\{Math.random() * 360\}, 70%, 80%)`;\
+      confetti.appendChild(piece);\
+    \}\
+  \}\
+  createConfetti();\
+</script>\
+\
+</body>\
+</html>\
+}
