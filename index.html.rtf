@@ -1,0 +1,177 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 AppleColorEmoji;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="en">\
+<head>\
+  <meta charset="UTF-8">\
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+  <title>Kapil & Monika's Baby Prediction Game</title>\
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">\
+  <style>\
+    body \{\
+      font-family: 'Quicksand', sans-serif;\
+      background: #fef9f4;\
+      color: #333;\
+      margin: 0;\
+      padding: 0;\
+      display: flex;\
+      flex-direction: column;\
+      align-items: center;\
+      min-height: 100vh;\
+    \}\
+    header \{\
+      text-align: center;\
+      padding: 2rem 1rem;\
+    \}\
+    header h1 \{\
+      font-size: 2rem;\
+      margin-bottom: 0.5rem;\
+    \}\
+    header p \{\
+      font-size: 1rem;\
+      color: #777;\
+    \}\
+    #countdown \{\
+      font-size: 1.5rem;\
+      margin: 1rem 0;\
+      color: #ff6f61;\
+    \}\
+    form \{\
+      background: #fff;\
+      padding: 2rem;\
+      border-radius: 1rem;\
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);\
+      width: 90%;\
+      max-width: 500px;\
+      display: flex;\
+      flex-direction: column;\
+      gap: 1rem;\
+    \}\
+    input, select, textarea, button \{\
+      font-family: inherit;\
+      font-size: 1rem;\
+      padding: 0.75rem;\
+      border: 1px solid #ccc;\
+      border-radius: 0.5rem;\
+    \}\
+    button \{\
+      background: #ff6f61;\
+      color: white;\
+      border: none;\
+      cursor: pointer;\
+      transition: background 0.3s;\
+    \}\
+    button:hover \{\
+      background: #ff3b2e;\
+    \}\
+    .thankyou \{\
+      display: none;\
+      text-align: center;\
+      padding: 2rem;\
+    \}\
+  </style>\
+</head>\
+<body>\
+\
+<header>\
+  <h1>
+\f1 \uc0\u55357 \u56438 
+\f0  Kapil & Monika's Baby Prediction Game!</h1>\
+  <p>
+\f1 \uc0\u55356 \u57225 
+\f0  Submit your guesses! (They stay private until the big reveal!)</p>\
+  <div id="countdown"></div>\
+</header>\
+\
+<form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" id="prediction-form">\
+  <label>Gender:</label>\
+  <select name="gender" required>\
+    <option value="Boy">Boy</option>\
+    <option value="Girl">Girl</option>\
+  </select>\
+\
+  <label>Who will the baby look like?</label>\
+  <select name="resemblance" required>\
+    <option value="Kapil">Kapil</option>\
+    <option value="Monika">Monika</option>\
+    <option value="Other">Other</option>\
+  </select>\
+\
+  <label>If Other, please specify:</label>\
+  <input type="text" name="other-resemblance" placeholder="Type here if you selected Other">\
+\
+  <label>Guess the Date and Time of Birth:</label>\
+  <input type="datetime-local" name="birthdate" required>\
+\
+  <label>Suggest a Baby Name for a Girl:</label>\
+  <input type="text" name="girl-name-suggestion" placeholder="Girl name suggestion">\
+\
+  <label>Suggest a Baby Name for a Boy:</label>\
+  <input type="text" name="boy-name-suggestion" placeholder="Boy name suggestion">\
+\
+  <label>Advice for the New Parents:</label>\
+  <textarea name="advice" rows="3" placeholder="Share your wisdom!" required></textarea>\
+\
+  <button type="submit">Submit Your Guess 
+\f1 \uc0\u55356 \u57224 
+\f0 </button>\
+</form>\
+\
+<div class="thankyou" id="thankyou">\
+  <h2>
+\f1 \uc0\u55356 \u57225 
+\f0  Thank you for your guess!</h2>\
+  <p>We can't wait to reveal everything after the baby arrives!</p>\
+</div>\
+\
+<script>\
+  // Countdown Timer\
+  (function() \{\
+    const countdown = document.getElementById('countdown');\
+    const target = new Date('2025-06-05T00:00:00').getTime();\
+\
+    const interval = setInterval(() => \{\
+      const now = new Date().getTime();\
+      const distance = target - now;\
+\
+      if (distance < 0) \{\
+        clearInterval(interval);\
+        countdown.innerHTML = "
+\f1 \uc0\u55356 \u57225 
+\f0  Baby Time! 
+\f1 \uc0\u55356 \u57225 
+\f0 ";\
+        return;\
+      \}\
+\
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));\
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));\
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));\
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);\
+\
+      countdown.innerHTML = `$\{days\}d $\{hours\}h $\{minutes\}m $\{seconds\}s left!`;\
+    \}, 1000);\
+  \})();\
+\
+  // Thank You Message after Form Submit\
+  (function() \{\
+    const form = document.getElementById('prediction-form');\
+    const thankyou = document.getElementById('thankyou');\
+\
+    form.addEventListener('submit', function(event) \{\
+      event.preventDefault();\
+      form.style.display = 'none';\
+      thankyou.style.display = 'block';\
+      this.submit();\
+    \});\
+  \})();\
+</script>\
+\
+</body>\
+</html>\
+}
