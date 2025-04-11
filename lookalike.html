@@ -3,63 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby Prediction - Lookalike</title>
+  <title>Baby Lookalike Prediction</title>
+  <link rel="icon" href="https://emojiapi.dev/api/v1/baby/64.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Comic Neue', cursive;
-      background: url('https://images.unsplash.com/photo-1607746882042-944635dfe10e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background: url('https://drive.google.com/uc?id=1ki7No0iCJ0Aq41VgY0gWBJc9OMpA5SGk') no-repeat center center fixed;
       background-size: cover;
+      color: #333;
+      margin: 0;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      margin: 0;
+      overflow-x: hidden;
+      font-size: 20px;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #ffffffcc;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #ff6f61;
     }
     form {
       background: #ffffffcc;
       padding: 2rem;
       border-radius: 1rem;
       box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 90%;
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      width: 90%;
+      max-width: 400px;
+    }
+    input, button, label {
+      font-size: 1.2rem;
     }
     button {
       background: #ff6f61;
       color: white;
-      padding: 0.75rem;
       border: none;
+      padding: 0.75rem;
       border-radius: 0.75rem;
       cursor: pointer;
-      font-size: 1rem;
       transition: background 0.3s, transform 0.3s;
     }
     button:hover {
       background: #ff3b2e;
       transform: scale(1.05);
     }
-    .boy-label {
-      color: #3399ff;
-      font-weight: bold;
-    }
-    .girl-label {
-      color: #ff66cc;
-      font-weight: bold;
+    @media (max-width: 600px) {
+      body {
+        font-size: 22px;
+      }
+      header h1 {
+        font-size: 2.5rem;
+      }
     }
   </style>
 </head>
 <body>
 
-<h1>👶 Who will the Baby Look Like?</h1>
+<header>
+  <h1>👶 Who Will the Baby Look Like?</h1>
+</header>
 
 <form id="lookalikeForm">
-  <label>Pick One:</label>
-  <label class="boy-label"><input type="radio" name="lookalike" value="Kapil" required> Kapil</label>
-  <label class="girl-label"><input type="radio" name="lookalike" value="Monika" required> Monika</label>
+  <label>Pick one:</label>
+  <label><input type="radio" name="lookalike" value="Kapil" required> Kapil</label>
+  <label><input type="radio" name="lookalike" value="Monika" required> Monika</label>
   <label><input type="radio" name="lookalike" value="Other" required> Other</label>
 
   <label>If Other, please specify:</label>
@@ -71,11 +93,11 @@
 <script>
   document.getElementById('lookalikeForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const lookalike = document.querySelector('input[name=\"lookalike\"]:checked').value;
+    const lookalike = document.querySelector('input[name="lookalike"]:checked').value;
     const otherResemblance = document.getElementById('otherResemblance').value;
     localStorage.setItem('lookalike', lookalike);
     localStorage.setItem('otherResemblance', otherResemblance);
-    window.location.href = 'birthdate.html'; // Go to next page
+    window.location.href = 'birthdate.html';
   });
 </script>
 
