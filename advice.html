@@ -3,103 +3,207 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby Prediction - Advice</title>
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <title>Share Your Advice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Comic Neue', cursive;
+      font-family: 'Fredoka One', cursive;
       background: url('https://github.com/Kapil-monika-baby/Babyprediction/blob/main/WhatsApp%20Image%202025-04-11%20at%2016.20.47.jpeg?raw=true') no-repeat center center fixed;
       background-size: cover;
+      margin: 0;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      margin: 0;
+      color: #333;
+      font-size: 22px;
+      overflow: hidden;
+      animation: fadeIn 1s ease-in;
+    }
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #ffffffcc;
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      margin-bottom: 2rem;
+      width: 90%;
+      max-width: 700px;
+      animation: bounceIn 1s ease;
+      position: relative;
+    }
+    header h1 {
+      font-size: 3rem;
+      color: #ff6f61;
+      animation: pulse 2s infinite;
+    }
+    .dancing-emoji {
+      font-size: 2.5rem;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      animation: dance 2s infinite ease-in-out;
     }
     form {
       background: #ffffffcc;
       padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 90%;
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 450px;
+      animation: zoomIn 1s ease;
+    }
+    textarea {
+      font-family: 'Comic Neue', cursive;
+      padding: 1rem;
+      font-size: 1.5rem;
+      border: 2px solid #ccc;
+      border-radius: 1rem;
+      resize: none;
+      height: 150px;
+      transition: all 0.3s ease;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #ff6f61;
+      box-shadow: 0 0 15px #ff6f61;
+      animation: bounceInput 0.5s ease;
     }
     button {
       background: #ff6f61;
       color: white;
-      padding: 0.75rem;
       border: none;
-      border-radius: 0.75rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      font-size: 1.6rem;
       cursor: pointer;
-      font-size: 1rem;
       transition: background 0.3s, transform 0.3s;
     }
     button:hover {
       background: #ff3b2e;
-      transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      80% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+    @keyframes zoomIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes bounceInput {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.1); }
+      50% { transform: scale(0.95); }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes dance {
+      0% { transform: rotate(0deg) translateY(0); }
+      25% { transform: rotate(10deg) translateY(-5px); }
+      50% { transform: rotate(-10deg) translateY(5px); }
+      75% { transform: rotate(10deg) translateY(-5px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        font-size: 24px;
+      }
+      header h1 {
+        font-size: 2.5rem;
+      }
     }
   </style>
 </head>
 <body>
+
+<!-- Background Music -->
 <audio controls autoplay loop style="display:none;">
   <source src="https://baby-prediction-music.s3.amazonaws.com/playful-kids-music.mp3" type="audio/mpeg">
-  Your browser does not support the audio element.
 </audio>
 
-<h1>👶 Final Step: Share Your Advice!</h1>
+<header>
+  <h1>🍼 Final Step: Share Your Advice!</h1>
+  <div class="dancing-emoji">🕺</div>
+</header>
 
 <form id="adviceForm">
-  <label>Your Advice for the New Parents:</label>
-  <textarea id="advice" placeholder="Share your wisdom!" required></textarea>
+  <label>💌 Your Advice for the New Parents:</label>
+  <textarea id="advice" placeholder="Share your wisdom here!" required></textarea>
 
   <button type="submit">Submit 🎉</button>
 </form>
 
+<!-- 🎉 Confetti Library -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
 <script>
-  document.getElementById('adviceForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const advice = document.getElementById('advice').value;
-    localStorage.setItem('advice', advice);
+document.getElementById('adviceForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const advice = document.getElementById('advice').value;
+  localStorage.setItem('advice', advice);
 
-    // Now gather ALL saved answers
-    const data = {
-      guestName: localStorage.getItem('guestName'),
-      gender: localStorage.getItem('gender'),
-      lookalike: localStorage.getItem('lookalike'),
-      otherResemblance: localStorage.getItem('otherResemblance'),
-      birthdate: localStorage.getItem('birthdate'),
-      girlName: localStorage.getItem('girlName'),
-      boyName: localStorage.getItem('boyName'),
-      advice: localStorage.getItem('advice')
-    };
+  // Gather all data
+  const data = {
+    guestName: localStorage.getItem('guestName'),
+    gender: localStorage.getItem('gender'),
+    lookalike: localStorage.getItem('lookalike'),
+    otherResemblance: localStorage.getItem('otherResemblance'),
+    birthdate: localStorage.getItem('birthdate'),
+    boyName: localStorage.getItem('boyName'),
+    girlName: localStorage.getItem('girlName'),
+    advice: localStorage.getItem('advice')
+  };
 
-    // Prepare FormData to send
-    const formData = new FormData();
-    for (const key in data) {
-      formData.append(key, data[key]);
-    }
+  // Prepare FormData
+  const formData = new FormData();
+  for (const key in data) {
+    formData.append(key, data[key]);
+  }
 
-    // Submit to Formspree
-    fetch('https://formspree.io/f/maneazrr', {
-      method: 'POST',
-      body: formData,
-      headers: { 'Accept': 'application/json' }
-    }).then(response => {
-      if (response.ok) {
-        localStorage.clear(); // Clear after submit
-        window.location.href = 'thankyou.html'; // Redirect to final Thank You page
-      } else {
-        alert('Oops! Something went wrong. Please try again.');
-      }
-    }).catch(error => {
-      alert('Oops! Something went wrong. Please try again.');
-    });
+  // 🎉 Confetti on Submit
+  confetti({
+    particleCount: 300,
+    spread: 90,
+    origin: { y: 0.6 }
   });
+
+  // Submit to Formspree
+  fetch('https://formspree.io/f/maneazrr', {
+    method: 'POST',
+    body: formData,
+    headers: { 'Accept': 'application/json' }
+  }).then(response => {
+    if (response.ok) {
+      localStorage.clear(); // Clear localStorage
+      setTimeout(function() {
+        window.location.href = 'thankyou.html'; // Redirect to Thank You page
+      }, 1500);
+    } else {
+      alert('Oops! Something went wrong. Please try again.');
+    }
+  }).catch(error => {
+    alert('Oops! Something went wrong. Please try again.');
+  });
+});
 </script>
 
 </body>
