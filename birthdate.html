@@ -1,3 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎈 Guess Baby's Birthdate</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Fredoka+One&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Fredoka One', cursive;
+      background: url('https://github.com/KM2567/Kapil-MonikaBabyprediction/blob/main/WhatsApp%20Image%202025-04-11%20at%2016.20.37.jpeg?raw=true') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 20px;
+      color: #333;
+      overflow: hidden;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: #ffffffcc;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 600px;
+      animation: bounceIn 1s ease;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      color: #ff6f61;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      60% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    form {
+      background: #ffffffcc;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 400px;
+      animation: bounceIn 1.2s ease;
+    }
+
+    label {
+      font-size: 1.4rem;
+    }
+
+    input[type="date"] {
+      padding: 0.5rem;
+      border: 2px solid #ccc;
+      border-radius: 0.75rem;
+      text-align: center;
+      font-size: 1.4rem;
+      transition: all 0.3s ease;
+      background: #fff url('https://img.icons8.com/ios-filled/24/000000/calendar--v1.png') no-repeat right 1rem center;
+      background-size: 24px;
+    }
+
+    input[type="date"]:focus {
+      border-color: #ff6f61;
+      box-shadow: 0 0 15px rgba(255, 111, 97, 0.8);
+      animation: wiggle 0.4s ease;
+      outline: none;
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(0); }
+      25% { transform: rotate(1deg); }
+      50% { transform: rotate(-1deg); }
+      75% { transform: rotate(1deg); }
+      100% { transform: rotate(0); }
+    }
+
+    button {
+      background: linear-gradient(145deg, #ff6f61, #ff3b2e);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      font-size: 1.4rem;
+      transition: transform 0.3s, background 0.3s;
+    }
+
+    button:hover {
+      background: #e62e2e;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 2rem; }
+      form { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<audio autoplay loop style="display:none;">
+  <source src="https://baby-prediction-music.s3.amazonaws.com/playful-kids-music.mp3" type="audio/mpeg">
+</audio>
+
+<header>
+  <h1>🎉 Guess Baby's Arrival Date!</h1>
+</header>
+
+<form id="birthdateForm">
+  <label>Pick a Date:</label>
+  <input type="date" id="birthDate" name="birthDate" min="2025-05-01" max="2025-06-30">
+  <button type="submit">Next ➡️</button>
+</form>
+
 <script>
   const form = document.getElementById('birthdateForm');
   const birthDateInput = document.getElementById('birthDate');
@@ -24,3 +154,6 @@
     window.location.href = '/Babyprediction/names.html';  <!-- Updated path -->
   });
 </script>
+
+</body>
+</html>
