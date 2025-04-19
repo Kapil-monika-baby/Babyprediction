@@ -70,6 +70,11 @@
   <p>Your predictions and suggestions have been recorded.<br>We can't wait to meet Baby Kapil & Monika! ✨</p>
   <p>The Winner gets a surpirse gift from the new parents ✨</p>
 </div>
-
+<script>
+  history.pushState(null, "", location.href);
+  window.onpopstate = function () {
+    window.location.href = "index.html";
+  };
+</script>
 </body>
 </html>
