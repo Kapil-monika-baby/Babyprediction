@@ -57,7 +57,6 @@
       gap: 1rem;
       width: 100%;
       max-width: 400px;
-      position: relative;
       animation: bounceIn 1.2s ease;
     }
 
@@ -107,38 +106,6 @@
       transform: scale(1.05);
     }
 
-    .balloon::after {
-      content: '';
-      position: absolute;
-      bottom: -15px;
-      left: 50%;
-      width: 2px;
-      height: 20px;
-      background: #333;
-      transform: translateX(-50%);
-    }
-
-    .balloon:nth-child(1) {
-      left: 5%;
-      animation-delay: 0s;
-    }
-
-    .balloon:nth-child(2) {
-      left: 30%;
-      animation-delay: 3s;
-    }
-
-    .balloon:nth-child(3) {
-      left: 60%;
-      animation-delay: 5s;
-    }
-
-    @keyframes floatBalloon {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
-      100% { transform: translateY(0); }
-    }
-
     @media (max-width: 600px) {
       header h1 { font-size: 2rem; }
       form { padding: 1.5rem; }
@@ -146,11 +113,6 @@
   </style>
 </head>
 <body>
-
-<!-- Background Balloons -->
-<div class="balloon"></div>
-<div class="balloon"></div>
-<div class="balloon"></div>
 
 <audio autoplay loop style="display:none;">
   <source src="https://baby-prediction-music.s3.amazonaws.com/playful-kids-music.mp3" type="audio/mpeg">
@@ -170,8 +132,12 @@
   document.getElementById('birthdateForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const birthDate = document.getElementById('birthDate').value;
-    localStorage.setItem('birthDate', birthDate);
-    window.location.href = 'names.html';
+    if (birthDate) {
+      localStorage.setItem('birthDate', birthDate);
+      window.location.href = 'names.html';
+    } else {
+      alert('Please select a valid date!');
+    }
   });
 </script>
 
