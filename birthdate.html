@@ -122,32 +122,34 @@
   <h1>🎉 Guess Baby's Arrival Date!</h1>
 </header>
 
-<form id="birthdateForm">
+<form id="birthdateForm" action="https://formspree.io/f/yourFormID" method="POST">
   <label>Pick a Date:</label>
-  <input type="date" id="birthDate" name="birthDate" required min="2025-05-01" max="2025-06-30">
+  <input type="date" id="birthDate" name="birthDate" min="2025-05-01" max="2025-06-30">
   <button type="submit">Next ➡️</button>
 </form>
 
 <script>
-  document.getElementById('birthdateForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+  const form = document.getElementById('birthdateForm');
+  const birthDateInput = document.getElementById('birthDate');
 
-    const birthDateInput = document.getElementById('birthDate');
-    let birthDate = birthDateInput.value;
-
-    if (!birthDate) {
+  form.addEventListener('submit', function() {
+    // If no date is selected
+    if (!birthDateInput.value) {
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      birthDate = `${yyyy}-${mm}-${dd}`;
-      birthDateInput.value = birthDate; // update field visually too
+      let selectedDate = `${yyyy}-${mm}-${dd}`;
+
+      // Check against min and max
+      if (selectedDate < birthDateInput.min) selectedDate = birthDateInput.min;
+      if (selectedDate > birthDateInput.max) selectedDate = birthDateInput.max;
+
+      birthDateInput.value = selectedDate; // Set for form submission
     }
 
-    localStorage.setItem('birthDate', birthDate);
-    console.log("Saved birthDate:", birthDate);  // for testing
-
-    window.location.href = 'names.html';
+    // Save to localStorage
+    localStorage.setItem('birthDate', birthDateInput.value);
   });
 </script>
 
