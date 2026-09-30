@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoodNews Baby — Prediction Games</title>
+  <meta name="description" content="Create a beautiful personalized baby prediction game for family and friends." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">♥</span><span>GoodNews<span class="muted">Baby</span></span></div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard">⌂ <span>Dashboard</span></button>
+        <button class="nav-item" data-view="create">＋ <span>Create Game</span></button>
+        <button class="nav-item" data-view="games">◈ <span>My Games</span></button>
+        <button class="nav-item" data-view="results">♛ <span>Results</span></button>
+      </nav>
+      <div class="sidebar-footer">Platform foundation<br><small>Prototype v1</small></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow">BABY PREDICTION PLATFORM</div><h1 id="page-title">Your dashboard</h1></div>
+        <button class="avatar">K</button>
+      </header>
+
+      <section id="dashboard" class="view active-view">
+        <div class="hero-card">
+          <div><span class="pill">NEW</span><h2>Create a prediction game for your baby.</h2><p>Invite family and friends to predict the little one's big moments.</p><button class="primary" data-view-target="create">Create your game →</button></div>
+          <div class="hero-illustration">👶<span>✦</span><span>♡</span></div>
+        </div>
+        <div class="section-heading"><div><h2>Your games</h2><p>Manage your active and completed prediction games.</p></div><button class="secondary" data-view-target="create">＋ New game</button></div>
+        <div id="game-cards" class="game-grid"></div>
+      </section>
+
+      <section id="create" class="view">
+        <div class="section-heading"><div><h2>Create your game</h2><p>Choose the predictions you want your guests to answer.</p></div></div>
+        <div class="builder-layout">
+          <div class="builder-card">
+            <label>Parent / family name<input id="parent-name" value="Kapil & Monika" /></label>
+            <label>Baby nickname (optional)<input id="baby-name" placeholder="Baby Agarwal" /></label>
+            <label>Expected arrival date<input id="due-date" type="date" /></label>
+            <div class="question-list" id="question-list"></div>
+            <button class="primary full" id="create-game-btn">Create game →</button>
+          </div>
+          <div class="preview-card"><div class="preview-label">LIVE PREVIEW</div><div class="phone-preview"><div class="preview-baby">👶</div><h3 id="preview-title">Kapil & Monika's Baby</h3><p>How well do you know the parents? Make your predictions and find out who knows Baby best!</p><div class="preview-question">What do you think Baby will be?</div><div class="choice-row"><span>💗 Girl</span><span>💙 Boy</span></div><button class="preview-button">Start predicting</button></div></div>
+        </div>
+      </section>
+
+      <section id="games" class="view"><div class="section-heading"><div><h2>My games</h2><p>Your published prediction games.</p></div></div><div id="games-table" class="table-card"></div></section>
+      <section id="results" class="view"><div class="section-heading"><div><h2>Prediction results</h2><p>See who predicted Baby's big moments.</p></div></div><div class="empty-state"><div>🏆</div><h3>Results will appear here</h3><p>Create a game and share it with family and friends. Their predictions will be collected here.</p></div></section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
