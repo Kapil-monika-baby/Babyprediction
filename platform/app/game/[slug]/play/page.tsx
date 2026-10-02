@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { supabase } from '../../../lib/supabase-browser';
+import { supabase } from '../../../../lib/supabase-browser';
 
 const questions = [
   ['gender', 'What do you predict — boy or girl?', ['Boy', 'Girl']],
