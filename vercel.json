@@ -1,9 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/platform/index.html" },
-    { "source": "/dashboard", "destination": "/platform/index.html" },
-    { "source": "/create", "destination": "/platform/index.html" },
-    { "source": "/games", "destination": "/platform/index.html" },
-    { "source": "/results", "destination": "/platform/index.html" }
-  ]
+  "framework": "nextjs",
+  "installCommand": "npm install && cd platform && npm install",
+  "buildCommand": "cd platform && npm run build",
+  "outputDirectory": "platform/.next"
 }
