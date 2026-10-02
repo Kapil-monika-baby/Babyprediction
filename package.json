@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "if [ -d platform ]; then cd platform && npm run build; else next build; fi",
+    "build": "if [ -d platform ]; then cd platform && npm install && npm run build; else next build; fi",
     "start": "next start",
     "lint": "next lint"
   },
