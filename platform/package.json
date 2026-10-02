@@ -6,20 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@supabase/supabase-js": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "@supabase/supabase-js": "2.57.0",
+    "next": "16.3.8",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "@tailwindcss/postcss": "latest",
-    "tailwindcss": "latest",
-    "typescript": "latest"
+    "@types/node": "24.0.0",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "@tailwindcss/postcss": "4.1.13",
+    "eslint": "9.35.0",
+    "eslint-config-next": "16.3.8",
+    "tailwindcss": "4.1.13",
+    "typescript": "5.9.2"
   }
 }
