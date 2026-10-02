@@ -1,5 +1,6 @@
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ogedhbmrrphxwqmiiuwl.supabase.co';
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_DbPanOolR5ZQzPKjtr6Sag_G6pitpgW';
+
 const TOKEN_KEY = 'babyprediction_supabase_token';
 
 function headers(token?: string) {
@@ -17,6 +18,16 @@ function token() {
 
 function saveSession(accessToken: string | undefined) {
   if (typeof window !== 'undefined' && accessToken) window.localStorage.setItem(TOKEN_KEY, accessToken);
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 class QueryBuilder {
@@ -76,11 +87,11 @@ class QueryBuilder {
 
   async then(resolve: (value: any) => any, reject?: (reason: any) => any) {
     try {
-      const response = await fetch(url + this.path + (this.query.toString() ? `?${this.query}` : ''), {
+      const response = await fetchWithTimeout(url + this.path + (this.query.toString() ? `?${this.query}` : ''), {
         method: this.method,
         headers: {
           ...headers(token()),
-          Prefer: this.wantSingle ? 'return=representation' : 'return=representation',
+          Prefer: 'return=representation',
         },
         body: this.method === 'GET' || this.method === 'HEAD' ? undefined : JSON.stringify(this.body),
       });
@@ -92,7 +103,7 @@ class QueryBuilder {
         : { data: null, error: { message: data?.message || text || 'Supabase request failed' }, count: null };
       return resolve(result);
     } catch (error) {
-      return reject ? reject(error) : resolve({ data: null, error: { message: String(error) } });
+      return reject ? reject(error) : resolve({ data: null, error: { message: error instanceof DOMException && error.name === 'AbortError' ? 'Supabase request timed out. Please try again.' : String(error) } });
     }
   }
 }
@@ -102,36 +113,48 @@ export const supabase = {
     async getUser() {
       const accessToken = token();
       if (!accessToken) return { data: { user: null }, error: null };
-      const response = await fetch(url + '/auth/v1/user', { headers: headers(accessToken) });
-      if (!response.ok) {
-        if (typeof window !== 'undefined') window.localStorage.removeItem(TOKEN_KEY);
-        return { data: { user: null }, error: { message: 'Session expired. Please log in again.' } };
+      try {
+        const response = await fetchWithTimeout(url + '/auth/v1/user', { headers: headers(accessToken) });
+        if (!response.ok) {
+          if (typeof window !== 'undefined') window.localStorage.removeItem(TOKEN_KEY);
+          return { data: { user: null }, error: { message: 'Session expired. Please log in again.' } };
+        }
+        return { data: { user: await response.json() }, error: null };
+      } catch (error) {
+        return { data: { user: null }, error: { message: error instanceof DOMException && error.name === 'AbortError' ? 'Supabase request timed out. Please try again.' : String(error) } };
       }
-      return { data: { user: await response.json() }, error: null };
     },
 
     async signInWithPassword(credentials: { email: string; password: string }) {
-      const response = await fetch(url + '/auth/v1/token?grant_type=password', {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify(credentials),
-      });
-      const data = await response.json();
-      if (!response.ok) return { data: null, error: { message: data?.msg || data?.message || 'Login failed' } };
-      saveSession(data.access_token);
-      return { data, error: null };
+      try {
+        const response = await fetchWithTimeout(url + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify(credentials),
+        });
+        const data = await response.json();
+        if (!response.ok) return { data: null, error: { message: data?.msg || data?.message || 'Login failed' } };
+        saveSession(data.access_token);
+        return { data, error: null };
+      } catch (error) {
+        return { data: null, error: { message: error instanceof DOMException && error.name === 'AbortError' ? 'Supabase request timed out. Please try again.' : String(error) } };
+      }
     },
 
     async signUp(payload: { email: string; password: string; options?: { data?: Record<string, string> } }) {
-      const response = await fetch(url + '/auth/v1/signup', {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({ email: payload.email, password: payload.password, data: payload.options?.data || {} }),
-      });
-      const data = await response.json();
-      if (!response.ok) return { data: null, error: { message: data?.msg || data?.message || 'Signup failed' } };
-      saveSession(data.access_token);
-      return { data, error: null };
+      try {
+        const response = await fetchWithTimeout(url + '/auth/v1/signup', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({ email: payload.email, password: payload.password, data: payload.options?.data || {} }),
+        });
+        const data = await response.json();
+        if (!response.ok) return { data: null, error: { message: data?.msg || data?.message || 'Signup failed' } };
+        saveSession(data.access_token);
+        return { data, error: null };
+      } catch (error) {
+        return { data: null, error: { message: error instanceof DOMException && error.name === 'AbortError' ? 'Supabase request timed out. Please try again.' : String(error) } };
+      }
     },
   },
 
@@ -144,7 +167,7 @@ export const supabase = {
       return {
         async upload(path: string, file: File, options?: { contentType?: string; cacheControl?: string }) {
           try {
-            const response = await fetch(`${url}/storage/v1/object/${bucket}/${path}`, {
+            const response = await fetchWithTimeout(`${url}/storage/v1/object/${bucket}/${path}`, {
               method: 'POST',
               headers: {
                 ...headers(token()),
@@ -156,7 +179,7 @@ export const supabase = {
             const data = await response.json().catch(() => ({}));
             return response.ok ? { data, error: null } : { data: null, error: { message: data?.message || 'Upload failed' } };
           } catch (error) {
-            return { data: null, error: { message: String(error) } };
+            return { data: null, error: { message: error instanceof DOMException && error.name === 'AbortError' ? 'Upload timed out. Please try again.' : String(error) } };
           }
         },
         getPublicUrl(path: string) {
