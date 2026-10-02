@@ -14,9 +14,20 @@ export default function SignupForm() {
     event.preventDefault();
     setLoading(true);
     setMessage('');
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    const emailRedirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}/login`
+      : 'https://babyprediction.vercel.app/login';
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name }, emailRedirectTo },
+    });
+
     setLoading(false);
-    setMessage(error ? error.message : 'Account created. Check your email if confirmation is enabled.');
+    setMessage(error
+      ? error.message
+      : 'Account created. Check your email. The verification link will return you to Baby Prediction.');
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">
