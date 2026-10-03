@@ -15,7 +15,12 @@ export default function LoginForm() {
     setMessage('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    setMessage(error ? error.message : 'Logged in successfully.');
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    setMessage('Logged in successfully. Redirecting…');
+    window.location.href = '/dashboard';
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">
