@@ -20,7 +20,7 @@ export default function LoginForm() {
       return;
     }
     setMessage('Logged in successfully. Redirecting…');
-    window.location.href = '/dashboard';
+    window.setTimeout(() => window.location.replace('/dashboard'), 250);
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">
