@@ -67,7 +67,7 @@ export default function ResultsPage() {
       await supabase.from('predictions').update({ score: prediction.score }).eq('id', prediction.id).eq('game_id', gameId);
     }
     setPredictions(scored);
-    await supabase.from('games').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', gameId).eq('owner_id', user.id);
+    await supabase.from('games').update({ updated_at: new Date().toISOString() }).eq('id', gameId).eq('owner_id', user.id);
     setSaved(true);
     setSaving(false);
   }
