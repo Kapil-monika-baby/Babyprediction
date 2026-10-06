@@ -10,6 +10,7 @@ type Game = {
   title: string;
   welcome_message: string | null;
   welcome_background_path: string | null;
+  status: string;
 };
 
 export default function PublicGamePage() {
@@ -23,9 +24,9 @@ export default function PublicGamePage() {
       if (!slug) return;
       const { data } = await supabase
         .from('games')
-        .select('id,slug,title,welcome_message,welcome_background_path')
+        .select('id,slug,title,welcome_message,welcome_background_path,status')
         .eq('slug', slug)
-        .eq('status', 'published')
+        .in('status', ['published', 'completed'])
         .maybeSingle();
       setGame(data);
       setLoading(false);
@@ -51,7 +52,7 @@ export default function PublicGamePage() {
             <p className="mt-6 text-sm font-semibold uppercase tracking-widest text-rose-500">A little prediction party</p>
             <h1 className="mt-3 text-4xl font-bold">{game.title}</h1>
             <p className="mx-auto mt-4 max-w-md text-slate-600">{game.welcome_message || 'Make your predictions, share your wishes, and see how well you know the parents.'}</p>
-            <a href={`/game/${game.slug}/play`} className="mt-8 inline-block rounded-2xl bg-slate-900 px-7 py-3 font-semibold text-white">Start predicting →</a>
+            {game.status === 'completed' ? <a href={`/game/${game.slug}/results`} className="mt-8 inline-block rounded-2xl bg-rose-500 px-7 py-3 font-semibold text-white">See the winners 🏆</a> : <a href={`/game/${game.slug}/play`} className="mt-8 inline-block rounded-2xl bg-slate-900 px-7 py-3 font-semibold text-white">Start predicting →</a>}
           </div>
         </div>
       </div>
