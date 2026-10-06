@@ -18,6 +18,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [winners, setWinners] = useState<{ guest_name: string; score: number }[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -27,11 +28,12 @@ export default function ResultsPage() {
       const { data: gameData } = await supabase.from('games').select('title,slug').eq('id', gameId).eq('owner_id', user.id).maybeSingle();
       const { data: questionData } = await supabase.from('game_questions').select('id,type,title,position,options').eq('game_id', gameId).eq('enabled', true).order('position');
       const { data: predictionData } = await supabase.from('predictions').select('id,guest_name,answers,score,created_at').eq('game_id', gameId).order('created_at', { ascending: true });
-      const { data: resultData } = await supabase.from('game_results').select('actual_results').eq('game_id', gameId).maybeSingle();
+      const { data: resultData } = await supabase.from('game_results').select('actual_results,winners').eq('game_id', gameId).maybeSingle();
       setGame(gameData);
       setQuestions(questionData || []);
       setPredictions((predictionData || []) as Prediction[]);
       if (resultData?.actual_results) setActual(resultData.actual_results as Record<string, string>);
+      setWinners((resultData?.winners || []) as { guest_name: string; score: number }[]);
       setSaved(Boolean(resultData));
       setLoading(false);
     }
@@ -56,9 +58,13 @@ export default function ResultsPage() {
       return { ...prediction, score };
     });
 
+    const maxScore = scored.length ? Math.max(...scored.map(p => p.score ?? 0)) : 0;
+    const winnerRows = scored.filter(p => (p.score ?? 0) === maxScore && maxScore > 0).map(p => ({ guest_name: p.guest_name, score: p.score ?? 0 }));
+
     const { error: resultError } = await supabase.from('game_results').upsert({
       game_id: gameId,
       actual_results: actual,
+      winners: winnerRows,
       completed_at: new Date().toISOString(),
     }, { onConflict: 'game_id' });
     if (resultError) { setError(resultError.message); setSaving(false); return; }
@@ -67,7 +73,8 @@ export default function ResultsPage() {
       await supabase.from('predictions').update({ score: prediction.score }).eq('id', prediction.id).eq('game_id', gameId);
     }
     setPredictions(scored);
-    await supabase.from('games').update({ updated_at: new Date().toISOString() }).eq('id', gameId).eq('owner_id', user.id);
+    setWinners(winnerRows);
+    await supabase.from('games').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', gameId).eq('owner_id', user.id);
     setSaved(true);
     setSaving(false);
   }
@@ -96,5 +103,6 @@ export default function ResultsPage() {
     <section className="mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-100 sm:p-8"><div className="flex items-center justify-between"><h2 className="text-xl font-bold">Leaderboard</h2><span className="text-sm text-slate-500">{predictions.length} prediction{predictions.length === 1 ? '' : 's'}</span></div>
       {!ranked.length ? <p className="mt-6 text-slate-500">No predictions yet.</p> : <div className="mt-5 space-y-3">{ranked.map((p, index) => <div key={p.id} className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-4"><div><span className="mr-3 text-lg">{index === 0 && saved ? '🏆' : `#${index + 1}`}</span><span className="font-semibold">{p.guest_name}</span></div><span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold">{p.score ?? 0} pts</span></div>)}</div>}
     </section>
+    {saved && game?.slug && <a href={`/game/${game.slug}/results`} className="mt-6 block rounded-2xl bg-rose-500 px-6 py-4 text-center font-semibold text-white">Open public winner page →</a>}
   </div></main>;
 }
