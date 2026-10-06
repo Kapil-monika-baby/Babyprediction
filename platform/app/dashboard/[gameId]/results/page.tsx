@@ -59,7 +59,7 @@ export default function ResultsPage() {
     });
 
     const maxScore = scored.length ? Math.max(...scored.map(p => p.score ?? 0)) : 0;
-    const winnerRows = scored.filter(p => (p.score ?? 0) === maxScore && maxScore > 0).map(p => ({ guest_name: p.guest_name, score: p.score ?? 0 }));
+    const winnerRows = scored.filter(p => (p.score ?? 0) === maxScore).map(p => ({ guest_name: p.guest_name, score: p.score ?? 0 }));
 
     const { error: resultError } = await supabase.from('game_results').upsert({
       game_id: gameId,
