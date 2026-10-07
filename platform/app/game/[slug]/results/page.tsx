@@ -36,8 +36,8 @@ export default function PublicResultsPage() {
       <div className="text-7xl">🏆</div>
       <p className="mt-5 text-sm font-semibold uppercase tracking-widest text-rose-500">Baby prediction results</p>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{title}</h1>
-      <p className="mt-3 text-slate-600">And the winner is…</p>
-      {!winners.length ? <div className="mt-8 rounded-2xl bg-slate-50 p-6"><p className="font-semibold">No perfect predictions this time!</p><p className="mt-2 text-sm text-slate-500">Thanks everyone for joining the prediction party. 💕</p></div> : <div className="mt-8 space-y-3">{winners.map((winner, index) => <div key={winner.guest_name + index} className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5"><div className="text-3xl">{index === 0 ? '🥇' : '🏆'}</div><p className="mt-2 text-xl font-bold">{winner.guest_name}</p><p className="mt-1 text-sm text-slate-600">{winner.score} correct prediction{winner.score === 1 ? '' : 's'}</p></div>)}</div>}
+      <p className="mt-3 text-slate-600">{winners.length && winners[0].score > 0 ? 'And the winner is…' : 'Here are the top predictors…'}</p>
+      {!winners.length ? <div className="mt-8 rounded-2xl bg-slate-50 p-6"><p className="font-semibold">Nobody matched the final answers, but the prediction party still happened!</p><p className="mt-2 text-sm text-slate-500">Thanks everyone for joining the prediction party. 💕</p></div> : <div className="mt-8 space-y-3">{winners.map((winner, index) => <div key={winner.guest_name + index} className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5"><div className="text-3xl">{index === 0 ? '🥇' : '🏆'}</div><p className="mt-2 text-xl font-bold">{winner.guest_name}</p><p className="mt-1 text-sm text-slate-600">{winner.score} correct prediction{winner.score === 1 ? '' : 's'}</p></div>)}</div>}
       <a href={`/game/${slug}`} className="mt-8 inline-block rounded-2xl border border-slate-200 px-6 py-3 font-semibold">Back to game</a>
     </div>
   </div></main>;
