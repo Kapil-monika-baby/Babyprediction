@@ -106,7 +106,7 @@ export default function PlayGamePage() {
       {question.description && <p className="mt-2 text-slate-500">{question.description}</p>}
       <div className="mt-6 grid gap-3">{options.length > 0 ? options.map(option => <button type="button" key={option} onClick={() => setAnswers({ ...answers, [question.id]: option })} className={`rounded-2xl border px-5 py-4 text-left font-semibold ${value === option ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200'}`}>{option}</button>) : <input required value={value} onChange={e => setAnswers({ ...answers, [question.id]: e.target.value })} className="w-full rounded-2xl border border-slate-200 px-4 py-4" type={inputType} placeholder={question.type === 'wishes' ? 'Write your message' : 'Write your answer'} />}</div>
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-      <button disabled={submitting || !value || !name.trim()} className="mt-8 w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{submitting ? 'Submitting…' : step === questions.length - 1 ? 'Submit predictions' : 'Next prediction →'}</button>
+      <button disabled={submitting || !name.trim() || (question.type !== 'wishes' && !value)} className="mt-8 w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{submitting ? 'Submitting…' : step === questions.length - 1 ? 'Submit predictions' : 'Next prediction →'}</button>
     </form>
   </div></main>;
 }
