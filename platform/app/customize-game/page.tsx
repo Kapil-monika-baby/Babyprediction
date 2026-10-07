@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase-browser';
 
 const sections = ['Welcome page', 'Baby gender', 'Arrival date', 'Lookalike', 'Name suggestions', 'Tips & wishes'];
 
 export default function CustomizeGamePage() {
-  const searchParams = useSearchParams();
-  const requestedGameId = searchParams.get('gameId');
+  const [requestedGameId, setRequestedGameId] = useState('');
   const [gameId, setGameId] = useState('');
   const [headline, setHeadline] = useState('Can you predict our baby?');
   const [message, setMessage] = useState('Join our baby prediction game and see who knows us best!');
@@ -17,6 +15,10 @@ export default function CustomizeGamePage() {
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setRequestedGameId(new URLSearchParams(window.location.search).get('gameId') || '');
+  }, []);
 
   useEffect(() => {
     const load = async () => {
