@@ -50,6 +50,12 @@ export default function ResultsPage() {
     if (!user || !gameId) { setError('Please log in again.'); setSaving(false); return; }
 
     const scoreable = questions.filter(q => q.type !== 'wishes');
+    const missing = scoreable.filter(q => !actual[q.id]?.trim());
+    if (missing.length) {
+      setError(`Please enter the actual result for: ${missing.map(q => q.title).join(', ')}`);
+      setSaving(false);
+      return;
+    }
     const scored = predictions.map(prediction => {
       let score = 0;
       for (const q of scoreable) {
