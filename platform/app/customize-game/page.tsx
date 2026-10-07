@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase-browser';
 
 const sections = ['Welcome page', 'Baby gender', 'Arrival date', 'Lookalike', 'Name suggestions', 'Tips & wishes'];
 
 export default function CustomizeGamePage() {
+  const searchParams = useSearchParams();
+  const requestedGameId = searchParams.get('gameId');
   const [gameId, setGameId] = useState('');
   const [headline, setHeadline] = useState('Can you predict our baby?');
   const [message, setMessage] = useState('Join our baby prediction game and see who knows us best!');
@@ -19,7 +22,16 @@ export default function CustomizeGamePage() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from('games').select('id,title,welcome_message,welcome_background_path').eq('owner_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+
+      let query = supabase
+        .from('games')
+        .select('id,title,welcome_message,welcome_background_path')
+        .eq('owner_id', user.id);
+
+      const { data } = requestedGameId
+        ? await query.eq('id', requestedGameId).maybeSingle()
+        : await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
+
       if (data) {
         setGameId(data.id);
         setHeadline(data.title || 'Can you predict our baby?');
@@ -27,11 +39,13 @@ export default function CustomizeGamePage() {
         if (data.welcome_background_path) {
           const { data: publicData } = supabase.storage.from('game-images').getPublicUrl(data.welcome_background_path);
           setBackgroundUrl(publicData.publicUrl);
+        } else {
+          setBackgroundUrl('');
         }
       }
     };
     load();
-  }, []);
+  }, [requestedGameId]);
 
   async function uploadBackground(file: File) {
     setUploading(true); setError(''); setSaved(false);
