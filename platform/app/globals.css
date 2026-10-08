@@ -1,9 +1,0 @@
-@import "tailwindcss";
-
-@layer base {
-  html, body { min-height: 100%; }
-  body { margin: 0; background: #fffaf7; color: #0f172a; font-family: Arial, Helvetica, sans-serif; }
-  *, *::before, *::after { box-sizing: border-box; }
-  a { color: inherit; }
-  button, input, textarea { font: inherit; }
-}
