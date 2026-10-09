@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase-browser';
+import { supabase } from '../../lib/supabase-browser';
 
 type Profile = { id: string; full_name: string | null; role: string; created_at: string };
 type Game = { id: string; owner_id: string; title: string; status: string; slug: string; created_at: string };
