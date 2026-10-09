@@ -16,7 +16,6 @@ export default function PublicResultsPage() {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [questions, setQuestions] = useState<Record<string, string>>({});
-  const [actualResults, setActualResults] = useState<Record<string, string>>({});
   const [actualResults, setActualResults] = useState<ActualResults>({});
   const [loading, setLoading] = useState(true);
   const [found, setFound] = useState(true);
@@ -29,11 +28,10 @@ export default function PublicResultsPage() {
       const { data: game } = await supabase.from('games').select('id,title').eq('slug', slug).eq('status', 'completed').maybeSingle();
       if (!game) { setFound(false); setLoading(false); return; }
 
-      const [{ data: result }, { data: predictionData }, { data: questionData }, { data: savedResults }] = await Promise.all([
+      const [{ data: result }, { data: predictionData }, { data: questionData }] = await Promise.all([
         supabase.from('game_results').select('winners,actual_results').eq('game_id', game.id).maybeSingle(),
         supabase.from('predictions').select('id,guest_name,answers,score,created_at').eq('game_id', game.id).order('score', { ascending: false }).order('created_at', { ascending: true }),
         supabase.from('game_questions').select('id,title').eq('game_id', game.id).order('position', { ascending: true }),
-        supabase.from('game_results').select('actual_results').eq('game_id', game.id).maybeSingle(),
       ]);
 
       const questionMap: Record<string, string> = {};
@@ -42,7 +40,7 @@ export default function PublicResultsPage() {
       setWinners((result?.winners || []) as Winner[]);
       setActualResults((result?.actual_results || {}) as ActualResults);
       setQuestions(questionMap);
-      setActualResults((savedResults?.actual_results || {}) as Record<string, string>);
+      setActualResults((result?.actual_results || {}) as ActualResults);
       setPredictions((predictionData || []) as Prediction[]);
       setLoading(false);
     }
