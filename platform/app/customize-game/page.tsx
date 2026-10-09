@@ -137,11 +137,18 @@ export default function CustomizeGamePage() {
     }).eq('id', gameId).eq('owner_id', (await supabase.auth.getUser()).data.user?.id);
     if (updateError) { setError(updateError.message); setSaving(false); return; }
     const ordered = [...questions].sort((a, b) => a.position - b.position);
-    const existingIds = new Set(ordered.filter(q => !q.id.startsWith('new-')).map(q => q.id));
-    const { data: dbQuestions } = await supabase.from('game_questions').select('id').eq('game_id', gameId);
-    for (const row of dbQuestions || []) {
-      if (!existingIds.has(row.id)) {
-        const { error } = await supabase.from('game_questions').delete().eq('id', row.id).eq('game_id', gameId);
+    // Only remove custom questions that the parent explicitly removed in the editor.
+    // Never delete default questions as a side effect of an incomplete/missing UI state.
+    const keepCustomIds = new Set(ordered.filter(q => q.is_custom && !q.id.startsWith('new-')).map(q => q.id));
+    const { data: dbCustomQuestions, error: loadCustomError } = await supabase
+      .from('game_questions')
+      .select('id')
+      .eq('game_id', gameId)
+      .eq('is_custom', true);
+    if (loadCustomError) { setError(loadCustomError.message); setSaving(false); return; }
+    for (const row of dbCustomQuestions || []) {
+      if (!keepCustomIds.has(row.id)) {
+        const { error } = await supabase.from('game_questions').delete().eq('id', row.id).eq('game_id', gameId).eq('is_custom', true);
         if (error) { setError(error.message); setSaving(false); return; }
       }
     }
