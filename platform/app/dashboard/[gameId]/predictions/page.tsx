@@ -6,8 +6,6 @@ import { supabase } from '../../../../lib/supabase-browser';
 
 type Prediction = { id: string; guest_name: string; answers: Record<string, string>; score: number | null; created_at: string };
 type Question = { id: string; title: string };
-type ScoreFilter = 'all' | 'scored' | 'unscored';
-type SortMode = 'score' | 'newest' | 'oldest' | 'name';
 
 export default function PredictionsPage() {
   const params = useParams<{ gameId: string }>();
@@ -17,8 +15,6 @@ export default function PredictionsPage() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [scoreFilter, setScoreFilter] = useState<ScoreFilter>('all');
-  const [sortMode, setSortMode] = useState<SortMode>('score');
 
   useEffect(() => {
     async function load() {
@@ -44,30 +40,13 @@ export default function PredictionsPage() {
   const filteredPredictions = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     const filtered = predictions.filter((prediction) => {
-      if (scoreFilter === 'scored' && prediction.score === null) return false;
-      if (scoreFilter === 'unscored' && prediction.score !== null) return false;
-      if (!query) return true;
-      const answerText = Object.entries(prediction.answers || {})
-        .map(([key, value]) => `${questions[key] || 'Prediction'} ${value ?? ''}`)
-        .join(' ');
-      return `${prediction.guest_name} ${answerText}`.toLocaleLowerCase().includes(query);
+      return !query || prediction.guest_name.toLocaleLowerCase().includes(query);
     });
 
-    return filtered.sort((a, b) => {
-      if (sortMode === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      if (sortMode === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      if (sortMode === 'name') return a.guest_name.localeCompare(b.guest_name, undefined, { sensitivity: 'base' });
-      return (b.score ?? -1) - (a.score ?? -1) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-  }, [predictions, questions, search, scoreFilter, sortMode]);
+    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [predictions, search]);
 
-  const hasActiveControls = search.trim().length > 0 || scoreFilter !== 'all' || sortMode !== 'score';
-
-  function resetControls() {
-    setSearch('');
-    setScoreFilter('all');
-    setSortMode('score');
-  }
+  function resetSearch() { setSearch(''); }
 
   return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-10">
     <div className="mx-auto max-w-6xl">
@@ -80,16 +59,12 @@ export default function PredictionsPage() {
       </div>
 
       {loading ? <p className="mt-8 text-slate-500">Loading…</p> : !predictions.length ? <div className="mt-6 rounded-3xl bg-white p-10 text-center ring-1 ring-slate-100"><div className="text-5xl">💌</div><p className="mt-4 font-semibold">No predictions yet</p><p className="mt-2 text-slate-500">Share your game link to invite family and friends.</p></div> : <>
-        <section aria-label="Search and filter predictions" className="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100 sm:p-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-700">Search guests and answers</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Try a guest name or prediction…" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100" /></label>
-            <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-700">Score status</span><select value={scoreFilter} onChange={(event) => setScoreFilter(event.target.value as ScoreFilter)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"><option value="all">All predictions</option><option value="scored">Scored predictions</option><option value="unscored">Not scored yet</option></select></label>
-            <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-700">Sort by</span><select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"><option value="score">Highest score first</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Guest name (A–Z)</option></select></label>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3"><p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-800">{filteredPredictions.length}</span> of {predictions.length} prediction{predictions.length === 1 ? '' : 's'}</p>{hasActiveControls && <button type="button" onClick={resetControls} className="rounded-full px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">Reset filters</button>}</div>
+        <section aria-label="Search predictions by guest name" className="mt-4 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 sm:p-4">
+          <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-700">Search by guest name</span><div className="flex items-center gap-2"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Enter guest name…" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100" />{search && <button type="button" onClick={resetSearch} className="shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50">Clear</button>}</div></label>
+          <p className="mt-2 text-xs text-slate-500">Showing {filteredPredictions.length} of {predictions.length} prediction{predictions.length === 1 ? '' : 's'}</p>
         </section>
 
-        {filteredPredictions.length === 0 ? <div className="mt-6 rounded-3xl bg-white p-10 text-center ring-1 ring-slate-100"><div className="text-4xl">🔎</div><p className="mt-3 font-semibold">No matching predictions</p><p className="mt-2 text-slate-500">Try another search or change the score filter.</p><button type="button" onClick={resetControls} className="mt-4 rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Clear search and filters</button></div> : <div className="mt-6 space-y-4">
+        {filteredPredictions.length === 0 ? <div className="mt-6 rounded-3xl bg-white p-10 text-center ring-1 ring-slate-100"><div className="text-4xl">🔎</div><p className="mt-3 font-semibold">No matching predictions</p><p className="mt-2 text-slate-500">Check the spelling or try another guest name.</p><button type="button" onClick={resetSearch} className="mt-4 rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Clear search</button></div> : <div className="mt-6 space-y-4">
           {filteredPredictions.map((p, index) => <article key={p.id} className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100">
             <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-4 sm:px-6">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 font-bold text-rose-600">{index + 1}</div>
