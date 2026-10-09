@@ -16,6 +16,7 @@ export default function PublicResultsPage() {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [questions, setQuestions] = useState<Record<string, string>>({});
+  const [actualResults, setActualResults] = useState<Record<string, string>>({});
   const [actualResults, setActualResults] = useState<ActualResults>({});
   const [loading, setLoading] = useState(true);
   const [found, setFound] = useState(true);
@@ -28,10 +29,11 @@ export default function PublicResultsPage() {
       const { data: game } = await supabase.from('games').select('id,title').eq('slug', slug).eq('status', 'completed').maybeSingle();
       if (!game) { setFound(false); setLoading(false); return; }
 
-      const [{ data: result }, { data: predictionData }, { data: questionData }] = await Promise.all([
+      const [{ data: result }, { data: predictionData }, { data: questionData }, { data: savedResults }] = await Promise.all([
         supabase.from('game_results').select('winners,actual_results').eq('game_id', game.id).maybeSingle(),
         supabase.from('predictions').select('id,guest_name,answers,score,created_at').eq('game_id', game.id).order('score', { ascending: false }).order('created_at', { ascending: true }),
         supabase.from('game_questions').select('id,title').eq('game_id', game.id).order('position', { ascending: true }),
+        supabase.from('game_results').select('actual_results').eq('game_id', game.id).maybeSingle(),
       ]);
 
       const questionMap: Record<string, string> = {};
@@ -40,6 +42,7 @@ export default function PublicResultsPage() {
       setWinners((result?.winners || []) as Winner[]);
       setActualResults((result?.actual_results || {}) as ActualResults);
       setQuestions(questionMap);
+      setActualResults((savedResults?.actual_results || {}) as Record<string, string>);
       setPredictions((predictionData || []) as Prediction[]);
       setLoading(false);
     }
@@ -114,7 +117,7 @@ export default function PublicResultsPage() {
           </div>
           <div className="mt-5 space-y-3">{visible.map((p, index) => <article key={p.id} className="rounded-3xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5">
             <div className="flex items-center gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white font-bold text-rose-600 shadow-sm">{index + 1}</div><div className="min-w-0 flex-1"><p className="truncate text-lg font-bold">{p.guest_name}</p><p className="text-xs text-slate-400">{new Date(p.created_at).toLocaleDateString()}</p></div><span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-emerald-700 shadow-sm">{p.score ?? 0} pts</span></div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">{Object.entries(p.answers || {}).map(([key,value]) => <div key={key} className="rounded-2xl bg-white px-3 py-2"><p className="text-xs text-slate-400">{questions[key] || 'Prediction'}</p><p className="mt-1 text-sm font-semibold">{value}</p></div>)}</div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">{Object.entries(p.answers || {}).map(([key,value]) => <div key={key} className="rounded-2xl bg-white px-3 py-2"><p className="text-xs text-slate-400">{questions[key] || 'Prediction'}</p><p className="mt-1 text-sm font-semibold">{value}</p>{actualResults[key]?.trim() && <p className="mt-1.5 border-t border-slate-100 pt-1.5 text-xs text-emerald-700"><span className="font-semibold">Parents’ answer:</span> {actualResults[key]}</p>}</div>)}</div>
           </article>)}</div>
         </section>}
       </div>
