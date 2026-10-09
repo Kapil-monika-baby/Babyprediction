@@ -7,6 +7,7 @@ import { supabase } from '../../../../lib/supabase-browser';
 type Winner = { guest_name: string; score: number };
 type Prediction = { id: string; guest_name: string; answers: Record<string, string>; score: number | null; created_at: string };
 type Question = { id: string; title: string };
+type ActualResults = Record<string, string>;
 
 export default function PublicResultsPage() {
   const params = useParams<{ slug: string }>();
@@ -15,6 +16,7 @@ export default function PublicResultsPage() {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [questions, setQuestions] = useState<Record<string, string>>({});
+  const [actualResults, setActualResults] = useState<ActualResults>({});
   const [loading, setLoading] = useState(true);
   const [found, setFound] = useState(true);
   const [view, setView] = useState<'top' | 'all'>('top');
@@ -27,7 +29,7 @@ export default function PublicResultsPage() {
       if (!game) { setFound(false); setLoading(false); return; }
 
       const [{ data: result }, { data: predictionData }, { data: questionData }] = await Promise.all([
-        supabase.from('game_results').select('winners').eq('game_id', game.id).maybeSingle(),
+        supabase.from('game_results').select('winners,actual_results').eq('game_id', game.id).maybeSingle(),
         supabase.from('predictions').select('id,guest_name,answers,score,created_at').eq('game_id', game.id).order('score', { ascending: false }).order('created_at', { ascending: true }),
         supabase.from('game_questions').select('id,title').eq('game_id', game.id).order('position', { ascending: true }),
       ]);
@@ -36,6 +38,7 @@ export default function PublicResultsPage() {
       (questionData as Question[] || []).forEach(q => { questionMap[q.id] = q.title; });
       setTitle(game.title);
       setWinners((result?.winners || []) as Winner[]);
+      setActualResults((result?.actual_results || {}) as ActualResults);
       setQuestions(questionMap);
       setPredictions((predictionData || []) as Prediction[]);
       setLoading(false);
@@ -88,6 +91,21 @@ export default function PublicResultsPage() {
           </div>
           {shared && <p className="mt-3 text-sm font-semibold text-emerald-600">✓ Results link copied!</p>}
         </div>
+
+        {Object.values(actualResults).some(value => typeof value === 'string' && value.trim()) && <section className="border-t border-slate-100 px-4 py-4 sm:px-7 sm:py-5">
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl bg-rose-50 px-4 py-3">
+              <span><span className="block text-sm font-bold text-rose-700">👶 Parents’ actual answers</span><span className="mt-0.5 block text-xs text-rose-600">Compare your guesses with the real answers</span></span>
+              <span className="text-rose-600 transition group-open:rotate-180">⌄</span>
+            </summary>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {Object.entries(actualResults).filter(([, value]) => typeof value === 'string' && value.trim()).map(([key, value]) => <div key={key} className="rounded-xl border border-slate-100 bg-white px-3 py-2">
+                <p className="text-xs text-slate-500">{questions[key] || 'Actual answer'}</p>
+                <p className="mt-0.5 break-words text-sm font-semibold text-slate-800">{value}</p>
+              </div>)}
+            </div>
+          </details>
+        </section>}
 
         {predictions.length > 0 && <section className="border-t border-slate-100 px-4 py-6 sm:px-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
