@@ -8,6 +8,7 @@ type Game = { id: string; title: string; status: string; slug: string };
 export default function DashboardPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [predictionCount, setPredictionCount] = useState(0);
+  const [gamePredictionCounts, setGamePredictionCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState('');
   const [shared, setShared] = useState('');
@@ -23,8 +24,13 @@ export default function DashboardPage() {
       const rows = data || [];
       setGames(rows);
       if (rows.length) {
-        const { count } = await supabase.from('predictions').select('id', { count: 'exact', head: true }).in('game_id', rows.map(g => g.id));
+        const { data: predictionRows, count } = await supabase.from('predictions').select('game_id', { count: 'exact' }).in('game_id', rows.map(g => g.id));
         setPredictionCount(count || 0);
+        const counts: Record<string, number> = {};
+        (predictionRows || []).forEach((prediction: { game_id: string }) => {
+          counts[prediction.game_id] = (counts[prediction.game_id] || 0) + 1;
+        });
+        setGamePredictionCounts(counts);
       }
       setLoading(false);
     }
@@ -132,6 +138,12 @@ export default function DashboardPage() {
                             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${completed ? 'bg-amber-50 text-amber-700' : isPublished ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}><span className={`h-1.5 w-1.5 rounded-full ${completed ? 'bg-amber-500' : isPublished ? 'bg-emerald-500' : 'bg-slate-400'}`} />{game.status || 'draft'}</span>
                           </div>
                           <p className="mt-1.5 break-all text-xs text-slate-400">babyprediction.vercel.app/game/{game.slug}</p>
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${ (gamePredictionCounts[game.id] || 0) > 0 ? 'bg-rose-50 text-rose-700' : 'bg-slate-50 text-slate-500'}`}>
+                              <span aria-hidden="true">💌</span>{gamePredictionCounts[game.id] || 0} {(gamePredictionCounts[game.id] || 0) === 1 ? 'prediction' : 'predictions'}
+                            </span>
+                            {(gamePredictionCounts[game.id] || 0) === 0 && isPublished && <span className="text-xs font-medium text-slate-500">Share your game to invite guests</span>}
+                          </div>
                         </div>
                       </div>
 
