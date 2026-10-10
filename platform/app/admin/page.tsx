@@ -97,7 +97,7 @@ export default function AdminPage() {
     <main className="min-h-screen bg-[#fff9f7] text-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div><Link href="/" className="text-sm font-bold text-rose-600">← Baby Prediction</Link><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-rose-500">Private control room</p><h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">Admin dashboard</h1><p className="mt-2 text-sm text-slate-600">Monitor parent accounts, games and guest participation.</p></div>
+          <div><Link href="/dashboard" className="text-sm font-bold text-rose-600">← Parent dashboard</Link><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-rose-500">Private control room</p><h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">Admin dashboard</h1><p className="mt-2 text-sm text-slate-600">Monitor parent accounts, games and guest participation.</p></div>
           <button onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold">Sign out</button>
         </header>
 
