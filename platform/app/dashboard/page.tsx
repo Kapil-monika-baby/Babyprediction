@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState('');
   const [shared, setShared] = useState('');
   const [publishedGameId, setPublishedGameId] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const published = new URLSearchParams(window.location.search).get('published');
@@ -20,6 +21,10 @@ export default function DashboardPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
+
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      setIsAdmin(profile?.role === 'admin');
+
       const { data } = await supabase.from('games').select('id,title,status,slug').eq('owner_id', user.id).order('created_at', { ascending: false });
       const rows = data || [];
       setGames(rows);
@@ -73,7 +78,10 @@ export default function DashboardPage() {
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-xl shadow-sm ring-1 ring-rose-100">👶</span>
             <span className="text-base font-extrabold tracking-tight">little <span className="text-rose-500">moments</span></span>
           </a>
-          <span className="rounded-full border border-white/90 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm">Parent space ✨</span>
+          <div className="flex items-center gap-2">
+            {isAdmin && <a href="/admin" className="rounded-full bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-600">Admin dashboard</a>}
+            <span className="rounded-full border border-white/90 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm">Parent space ✨</span>
+          </div>
         </nav>
 
         <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
