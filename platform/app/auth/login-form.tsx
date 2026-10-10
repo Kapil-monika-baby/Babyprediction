@@ -1,13 +1,35 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase-browser';
+
+function destinationAfterLogin() {
+  const requested = new URLSearchParams(window.location.search).get('next');
+  // Only allow local app paths; never redirect to an external URL.
+  return requested && requested.startsWith('/') && !requested.startsWith('//')
+    ? requested
+    : '/dashboard';
+}
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function redirectIfAlreadyLoggedIn() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (active && session) {
+        // If Android/browser Back returns to /login, send an authenticated user
+        // straight back into the app instead of leaving them on the login screen.
+        window.location.replace(destinationAfterLogin());
+      }
+    }
+    redirectIfAlreadyLoggedIn();
+    return () => { active = false; };
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -20,7 +42,7 @@ export default function LoginForm() {
       return;
     }
     setMessage('Logged in successfully. Redirecting…');
-    window.setTimeout(() => window.location.replace('/dashboard'), 250);
+    window.location.replace(destinationAfterLogin());
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">
