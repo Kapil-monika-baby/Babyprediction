@@ -16,19 +16,33 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
     let active = true;
+    let redirecting = false;
+
     async function redirectIfAlreadyLoggedIn() {
       const { data: { session } } = await supabase.auth.getSession();
-      if (active && session) {
-        // If Android/browser Back returns to /login, send an authenticated user
-        // straight back into the app instead of leaving them on the login screen.
+      if (!active) return;
+      if (session && !redirecting) {
+        // Replace the restored login entry so Android Back cannot strand an
+        // authenticated user on the login screen.
+        redirecting = true;
         window.location.replace(destinationAfterLogin());
+        return;
       }
+      if (!session) setCheckingSession(false);
     }
-    redirectIfAlreadyLoggedIn();
-    return () => { active = false; };
+
+    const onPageShow = () => { void redirectIfAlreadyLoggedIn(); };
+    window.addEventListener('pageshow', onPageShow);
+    void redirectIfAlreadyLoggedIn();
+
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, []);
 
   async function submit(event: FormEvent) {
@@ -43,6 +57,10 @@ export default function LoginForm() {
     }
     setMessage('Logged in successfully. Redirecting…');
     window.location.replace(destinationAfterLogin());
+  }
+
+  if (checkingSession) {
+    return <p className="mt-8 text-sm text-slate-500">Checking your session…</p>;
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">
