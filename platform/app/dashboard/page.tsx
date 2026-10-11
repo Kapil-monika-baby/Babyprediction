@@ -15,6 +15,9 @@ export default function DashboardPage() {
   const [publishedGameId, setPublishedGameId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
+  const [deletingGameId, setDeletingGameId] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const published = new URLSearchParams(window.location.search).get('published');
@@ -42,6 +45,39 @@ export default function DashboardPage() {
     }
     load();
   }, []);
+
+  async function deleteGame() {
+    if (!gameToDelete || deletingGameId) return;
+    const game = gameToDelete;
+    setDeletingGameId(game.id);
+    setDeleteError('');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      setDeletingGameId('');
+      setDeleteError('Your session has expired. Please sign in again.');
+      return;
+    }
+    const { data, error } = await supabase.from('games').delete()
+      .eq('id', game.id)
+      .eq('owner_id', user.id)
+      .select('id')
+      .maybeSingle();
+    if (error || !data) {
+      setDeletingGameId('');
+      setDeleteError(error?.message || 'This game could not be deleted. Please refresh and try again.');
+      return;
+    }
+    setGames(current => current.filter(item => item.id !== game.id));
+    const removedPredictions = gamePredictionCounts[game.id] || 0;
+    setPredictionCount(current => Math.max(0, current - removedPredictions));
+    setGamePredictionCounts(current => {
+      const next = { ...current };
+      delete next[game.id];
+      return next;
+    });
+    setGameToDelete(null);
+    setDeletingGameId('');
+  }
 
   async function shareGame(game: Game) {
     const url = `${window.location.origin}/game/${game.slug}`;
@@ -180,6 +216,7 @@ export default function DashboardPage() {
                         <button type="button" onClick={() => copyLink(game.slug)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">{copied === game.slug ? '✓ Copied' : 'Copy link'}</button>
                       </div>
                       {completed && <button type="button" onClick={() => shareResults(game)} className="mt-3 w-full rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 hover:bg-amber-100">{shared === `${game.slug}-results` ? '✓ Results ready to share' : '🏆 Share the results with everyone'}</button>}
+                      <button type="button" onClick={() => { setDeleteError(''); setGameToDelete(game); }} className="mt-3 w-full rounded-xl border border-rose-100 px-4 py-2.5 text-sm font-semibold text-slate-500 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700">Delete game</button>
                     </div>
                   </article>
                 );
@@ -190,6 +227,21 @@ export default function DashboardPage() {
 
         {!loading && games.length > 0 && <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-rose-100 bg-white/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div><p className="text-sm font-bold text-slate-800">Every guess becomes a memory 💗</p><p className="mt-1 text-xs leading-5 text-slate-500">Tip: share your game in the family WhatsApp group to get everyone involved.</p></div><a href="/create-game" className="shrink-0 text-sm font-bold text-rose-600 hover:text-rose-700">Create another game →</a></div>}
       </div>
+      {gameToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4" role="presentation" onClick={(event) => { if (event.target === event.currentTarget && !deletingGameId) setGameToDelete(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-game-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-2xl">🗑️</div>
+            <h2 id="delete-game-title" className="mt-4 text-xl font-extrabold text-slate-900">Delete this game?</h2>
+            <p className="mt-2 break-words font-bold text-slate-800">{gameToDelete.title || 'Baby prediction game'}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">This permanently deletes the game, its questions, guest predictions and results. {gameToDelete.status === 'published' ? 'Its shared game link will stop working.' : ''} Your baby profile and other games will not be affected.</p>
+            {deleteError && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{deleteError}</p>}
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" disabled={!!deletingGameId} onClick={() => { setGameToDelete(null); setDeleteError(''); }} className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 disabled:opacity-50">Keep game</button>
+              <button type="button" disabled={!!deletingGameId} onClick={deleteGame} className="min-h-11 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-60">{deletingGameId ? 'Deleting…' : 'Yes, delete game'}</button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
