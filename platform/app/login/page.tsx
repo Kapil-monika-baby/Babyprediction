@@ -1,6 +1,50 @@
+'use client';
+
+import { useEffect, useState } from "react";
 import LoginForm from "../auth/login-form";
+import { supabase } from "../../lib/supabase-browser";
 
 export default function LoginPage() {
+  const [ready, setReady] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let redirectStarted = false;
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active || redirectStarted) return;
+      if (session) {
+        redirectStarted = true;
+        setRedirecting(true);
+        window.location.replace("/dashboard");
+        return;
+      }
+      setReady(true);
+    }
+
+    const onPageShow = () => { void checkSession(); };
+    window.addEventListener("pageshow", onPageShow);
+    void checkSession();
+
+    return () => {
+      active = false;
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
+  if (!ready || redirecting) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fffaf7] px-6 text-slate-700">
+        <div className="text-center" role="status" aria-live="polite">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">👶</div>
+          <p className="mt-4 text-sm font-medium">{redirecting ? "Opening your parent dashboard…" : "Checking your session…"}</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#fffaf7] px-6 py-12 text-slate-900">
       <div className="mx-auto max-w-md">
