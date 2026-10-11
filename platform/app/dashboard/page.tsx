@@ -14,13 +14,14 @@ export default function DashboardPage() {
   const [shared, setShared] = useState('');
   const [publishedGameId, setPublishedGameId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const published = new URLSearchParams(window.location.search).get('published');
     if (published) setPublishedGameId(published);
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      if (!user) { window.location.replace('/login'); return; }
 
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
       setIsAdmin(profile?.role === 'admin');
@@ -67,6 +68,14 @@ export default function DashboardPage() {
     window.setTimeout(() => setCopied(''), 1800);
   }
 
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    if (error) { setSigningOut(false); window.alert('Could not sign out. Please try again.'); return; }
+    window.location.replace('/login');
+  }
+
   const publishedCount = games.filter(game => game.status === 'published').length;
 
   return (
@@ -81,6 +90,8 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             {isAdmin && <a href="/admin" className="rounded-full bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-600">Admin dashboard</a>}
             <span className="rounded-full border border-white/90 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm">Parent space ✨</span>
+            <a href="/account" className="rounded-full border border-rose-100 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-rose-50">Account</a>
+            <button type="button" onClick={signOut} disabled={signingOut} className="rounded-full bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60">{signingOut ? 'Signing out…' : 'Sign out'}</button>
           </div>
         </nav>
 
