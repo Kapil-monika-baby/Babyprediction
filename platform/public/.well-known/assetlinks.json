@@ -1,12 +1,15 @@
 [
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.linkcards.babyprediction",
-      "sha256_cert_fingerprints": [
-        "72:8E:50:E9:83:DC:F6:9D:D5:00:C4:7E:05:C4:28:A5:B1:6F:42:B8:EB:53:9B:53:79:56:8A:31:E6:7F:4D:76"
-      ]
-    }
-  }
+{
+"relation": [
+"delegate_permission/common.handle_all_urls"
+],
+"target": {
+"namespace": "android_app",
+"package_name": "com.linkcards.babyprediction",
+"sha256_cert_fingerprints": [
+"72:8E:50:E9:83:DC:F6:9D:D5:00:C4:7E:05:C4:28:A5:B1:6F:42:B8:EB:53:9B:53:79:56:8A:31:E6:7F:4D:76",
+"D3:46:49:EA:6D:8C:31:2C:32:3A:82:E6:42:D8:8D:0B:A9:AA:08:42:B9:15:B9:E1:00:AF:B3:E3:44:BB:09:48"
+]
+}
+}
 ]
