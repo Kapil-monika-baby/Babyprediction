@@ -11,6 +11,7 @@ type Question = {
   description: string | null;
   position: number;
   options: unknown;
+  is_custom?: boolean;
 };
 
 function normalizedOptions(value: unknown): string[] {
@@ -23,6 +24,15 @@ function defaultOptions(type: string): string[] {
   return [];
 }
 
+function followUpPrompt(type: string, title: string): string {
+  if (type === 'boy-name' || type === 'girl-name' || /name/i.test(title)) return 'Is there a fun story or special reason behind the name you suggested?';
+  if (type === 'gender') return 'What makes you think it will be a boy or a girl?';
+  if (type === 'arrival' || type === 'date') return 'Is there a special reason you picked this date?';
+  if (type === 'lookalike') return 'Why do you think the baby will look like them?';
+  if (type === 'wishes') return 'Would you like to add a little story or personal message?';
+  return 'What inspired your prediction? Share a fun story or reason (optional).';
+}
+
 export default function PlayGamePage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
@@ -31,6 +41,7 @@ export default function PlayGamePage() {
   const [name, setName] = useState('');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [followUps, setFollowUps] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -78,10 +89,14 @@ export default function PlayGamePage() {
     }
 
     setSubmitting(true);
+    const storedAnswers = { ...answers };
+    for (const [questionId, story] of Object.entries(followUps)) {
+      if (story.trim()) storedAnswers[`__followup__${questionId}`] = story.trim();
+    }
     const { error: predictionError } = await supabase.from('predictions').insert({
       game_id: game?.id,
       guest_name: name.trim(),
-      answers,
+      answers: storedAnswers,
     });
     setSubmitting(false);
     if (predictionError) {
@@ -113,6 +128,12 @@ export default function PlayGamePage() {
       <h1 className="mt-8 text-3xl font-bold">{question.title}</h1>
       {question.description && <p className="mt-2 text-slate-500">{question.description}</p>}
       <div className="mt-6 grid gap-3">{displayOptions.length > 0 ? displayOptions.map(option => <button type="button" key={option} onClick={() => setAnswers({ ...answers, [question.id]: option })} className={`rounded-2xl border px-5 py-4 text-left font-semibold ${value === option ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200'}`}>{option}</button>) : <input required value={value} onChange={e => setAnswers({ ...answers, [question.id]: e.target.value })} className="w-full rounded-2xl border border-slate-200 px-4 py-4" type={inputType} placeholder={question.type === 'wishes' ? 'Write your message' : 'Write your answer'} />}</div>
+      <div className="mt-6 rounded-2xl bg-rose-50/70 p-4">
+        <label htmlFor={`followup-${question.id}`} className="block text-sm font-semibold text-slate-800">💬 One more thing…</label>
+        <p className="mt-1 text-sm text-slate-600">{followUpPrompt(question.type, question.title)}</p>
+        <textarea id={`followup-${question.id}`} value={followUps[question.id] || ''} onChange={e => setFollowUps({ ...followUps, [question.id]: e.target.value.slice(0, 280) })} maxLength={280} rows={3} className="mt-3 w-full resize-y rounded-xl border border-rose-100 bg-white px-3 py-3 text-sm outline-none focus:border-rose-300" placeholder="Share a story… (optional)" />
+        <p className="mt-1 text-right text-xs text-slate-400">{(followUps[question.id] || '').length}/280 · Optional</p>
+      </div>
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       <button disabled={submitting || !name.trim() || (question.type !== 'wishes' && !value)} className="mt-6 w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{submitting ? 'Submitting…' : step === questions.length - 1 ? 'Submit predictions' : 'Next prediction →'}</button>
     </form>

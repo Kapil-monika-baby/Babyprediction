@@ -71,7 +71,17 @@ export default function PredictionsPage() {
               <div className="min-w-0 flex-1"><h2 className="truncate text-lg font-bold">{p.guest_name}</h2><p className="text-xs text-slate-400">{new Date(p.created_at).toLocaleString()}</p></div>
               {p.score !== null ? <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">{p.score} pts</span> : <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Not scored</span>}
             </div>
-            <div className="grid gap-2 p-3 sm:grid-cols-2 sm:gap-3 sm:p-5">{Object.entries(p.answers || {}).map(([key,value]) => <div key={key} className="rounded-2xl bg-slate-50 px-4 py-3"><p className="text-xs font-medium text-slate-400">{questions[key] || 'Prediction'}</p><p className="mt-1 break-words font-semibold text-slate-800">{value}</p></div>)}</div>
+            <div className="grid gap-2 p-3 sm:grid-cols-2 sm:gap-3 sm:p-5">{Object.entries(p.answers || {}).filter(([key]) => !key.startsWith('__followup__')).map(([key, value]) => {
+              const story = p.answers?.[`__followup__${key}`];
+              return <div key={key} className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-xs font-medium text-slate-500">{questions[key] || 'Additional prediction'}</p>
+                <p className="mt-1 break-words font-semibold text-slate-800">{value}</p>
+                {typeof story === 'string' && story.trim() && <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50/80 px-3 py-2.5">
+                  <p className="text-xs font-bold text-rose-600">💬 Their story</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{story}</p>
+                </div>}
+              </div>;
+            })}</div>
           </article>)}
         </div>}
       </>}
