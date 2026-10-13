@@ -115,15 +115,18 @@ export default function PublicResultsPage() {
           </div>
           <div className="mt-5 space-y-3">{visible.map((p, index) => <article key={p.id} className="rounded-3xl border border-slate-100 bg-slate-50/70 p-4 sm:p-5">
             <div className="flex items-center gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white font-bold text-rose-600 shadow-sm">{index + 1}</div><div className="min-w-0 flex-1"><p className="truncate text-lg font-bold">{p.guest_name}</p><p className="text-xs text-slate-400">{new Date(p.created_at).toLocaleDateString()}</p></div><span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-emerald-700 shadow-sm">{p.score ?? 0} pts</span></div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">{Object.entries(p.answers || {}).filter(([key]) => !key.startsWith('__followup__')).map(([key,value]) => <div key={key} className="rounded-2xl bg-white px-3 py-2"><p className="text-xs text-slate-400">{questions[key] || 'Prediction'}</p><p className="mt-1 break-words text-sm font-semibold">{value}</p>{actualResults[key]?.trim() && <p className="mt-1.5 border-t border-slate-100 pt-1.5 text-xs text-emerald-700"><span className="font-semibold">Parents’ answer:</span> {actualResults[key]}</p>}</div>)}</div>
-            {Object.entries(p.answers || {}).filter(([key, value]) => key.startsWith('__followup__') && typeof value === 'string' && value.trim()).map(([key, value]) => {
-              const questionId = key.slice('__followup__'.length);
-              return <div key={key} className="mt-3 rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3">
-                <p className="text-xs font-bold uppercase tracking-wide text-rose-600">💬 {questions[questionId] || 'Prediction'} · their story</p>
-                <p className="mt-1 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700">{value}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">{Object.entries(p.answers || {}).filter(([key]) => !key.startsWith('__followup__')).map(([key, value]) => {
+              const story = p.answers?.[`__followup__${key}`];
+              return <div key={key} className="rounded-2xl bg-white px-3 py-2">
+                <p className="text-xs text-slate-500">{questions[key] || 'Additional prediction'}</p>
+                <p className="mt-1 break-words text-sm font-semibold">{value}</p>
+                {actualResults[key]?.trim() && <p className="mt-1.5 border-t border-slate-100 pt-1.5 text-xs text-emerald-700"><span className="font-semibold">Parents’ answer:</span> {actualResults[key]}</p>}
+                {typeof story === 'string' && story.trim() && <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-2.5">
+                  <p className="text-xs font-bold text-rose-600">💬 Their story</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700">{story}</p>
+                </div>}
               </div>;
-            })}
-          </article>)}</div>
+            })}</div></article>)}</div>
         </section>}
       </div>
     </div>
