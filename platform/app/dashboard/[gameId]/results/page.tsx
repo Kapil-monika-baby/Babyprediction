@@ -68,20 +68,49 @@ export default function ResultsPage() {
     const maxScore = scored.length ? Math.max(...scored.map(p => p.score ?? 0)) : 0;
     const winnerRows = scored.filter(p => (p.score ?? 0) === maxScore).map(p => ({ guest_name: p.guest_name, score: p.score ?? 0 }));
 
+    // Hide the public results while scores are being recalculated. If any write fails,
+    // the game stays unpublished rather than exposing a partially updated leaderboard.
+    const { error: hideError } = await supabase
+      .from('games')
+      .update({ status: 'published', updated_at: new Date().toISOString() })
+      .eq('id', gameId)
+      .eq('owner_id', user.id);
+    if (hideError) { setError(`Could not prepare results safely: ${hideError.message}`); setSaving(false); return; }
+
     const { error: resultError } = await supabase.from('game_results').upsert({
       game_id: gameId,
       actual_results: actual,
       winners: winnerRows,
       completed_at: new Date().toISOString(),
     }, { onConflict: 'game_id' });
-    if (resultError) { setError(resultError.message); setSaving(false); return; }
+    if (resultError) { setError(`Could not save the actual results: ${resultError.message}`); setSaving(false); return; }
 
-    for (const prediction of scored) {
-      await supabase.from('predictions').update({ score: prediction.score }).eq('id', prediction.id).eq('game_id', gameId);
+    const scoreWrites = await Promise.all(scored.map(prediction =>
+      supabase.from('predictions')
+        .update({ score: prediction.score })
+        .eq('id', prediction.id)
+        .eq('game_id', gameId)
+    ));
+    const scoreWriteError = scoreWrites.find(result => result.error)?.error;
+    if (scoreWriteError) {
+      setError(`Actual results were saved, but one or more scores could not be updated. Results remain unpublished; please retry. Details: ${scoreWriteError.message}`);
+      setSaving(false);
+      return;
     }
+
+    const { error: publishError } = await supabase
+      .from('games')
+      .update({ status: 'completed', updated_at: new Date().toISOString() })
+      .eq('id', gameId)
+      .eq('owner_id', user.id);
+    if (publishError) {
+      setError(`Scores were saved, but results could not be published. Please retry. Details: ${publishError.message}`);
+      setSaving(false);
+      return;
+    }
+
     setPredictions(scored);
     setWinners(winnerRows);
-    await supabase.from('games').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', gameId).eq('owner_id', user.id);
     setSaved(true);
     setSaving(false);
   }
