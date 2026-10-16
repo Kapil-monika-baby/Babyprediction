@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
   const [deletingGameId, setDeletingGameId] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const [shareError, setShareError] = useState('');
 
   useEffect(() => {
     const published = new URLSearchParams(window.location.search).get('published');
@@ -79,29 +80,68 @@ export default function DashboardPage() {
     setDeletingGameId('');
   }
 
+  function showShareSuccess(key: string) {
+    setShareError('');
+    setShared(key);
+    window.setTimeout(() => setShared(current => current === key ? '' : current), 2200);
+  }
+
+  async function copyText(text: string, successKey: string) {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable in this browser.');
+      await navigator.clipboard.writeText(text);
+      showShareSuccess(successKey);
+    } catch {
+      setShareError('We couldn’t copy the link automatically. Open the game and use your browser’s Share option, or copy the URL shown on the game card.');
+    }
+  }
+
   async function shareGame(game: Game) {
     const url = `${window.location.origin}/game/${game.slug}`;
     const message = `Join ${game.title} and make your baby predictions! 👶💕`;
+    setShareError('');
     if (navigator.share) {
-      try { await navigator.share({ title: game.title, text: message, url }); setShared(game.slug); window.setTimeout(() => setShared(''), 1800); } catch {}
+      try {
+        await navigator.share({ title: game.title, text: message, url });
+        showShareSuccess(game.slug);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        await copyText(`${message} ${url}`, game.slug);
+      }
       return;
     }
-    await navigator.clipboard.writeText(`${message} ${url}`);
-    setShared(game.slug); window.setTimeout(() => setShared(''), 1800);
+    await copyText(`${message} ${url}`, game.slug);
   }
 
   async function shareResults(game: Game) {
     const url = `${window.location.origin}/game/${game.slug}/results`;
     const message = `🏆 ${game.title} results are here! See the winner and top predictions 🎉`;
-    if (navigator.share) { try { await navigator.share({ title: `${game.title} Results`, text: message, url }); setShared(`${game.slug}-results`); window.setTimeout(() => setShared(''), 1800); } catch {} return; }
-    await navigator.clipboard.writeText(`${message} ${url}`); setShared(`${game.slug}-results`); window.setTimeout(() => setShared(''), 1800);
+    const key = `${game.slug}-results`;
+    setShareError('');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${game.title} Results`, text: message, url });
+        showShareSuccess(key);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        await copyText(`${message} ${url}`, key);
+      }
+      return;
+    }
+    await copyText(`${message} ${url}`, key);
   }
 
   async function copyLink(slug: string) {
     const url = `${window.location.origin}/game/${slug}`;
-    await navigator.clipboard.writeText(url);
-    setCopied(slug);
-    window.setTimeout(() => setCopied(''), 1800);
+    setShareError('');
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable in this browser.');
+      await navigator.clipboard.writeText(url);
+      setCopied(slug);
+      window.setTimeout(() => setCopied(current => current === slug ? '' : current), 2200);
+    } catch {
+      setShareError('We couldn’t copy the link automatically. Open the game and use your browser’s Share option, or copy the URL shown on the game card.');
+    }
   }
 
   async function signOut() {
@@ -148,6 +188,8 @@ export default function DashboardPage() {
             <div><p className="font-bold text-emerald-900">Your game is live!</p><p className="mt-1 text-sm leading-5 text-emerald-800">The fun can begin. Share the game link with family and friends so they can join in.</p></div>
           </div>
         )}
+
+        {shareError && <p role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{shareError}</p>}
 
         <section className="mt-10 sm:mt-12">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">

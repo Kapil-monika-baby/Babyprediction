@@ -13,6 +13,7 @@ export default function PublicGamePage() {
   const [backgroundUrl, setBackgroundUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [shared, setShared] = useState(false);
+  const [shareError, setShareError] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -32,8 +33,22 @@ export default function PublicGamePage() {
     if (!game) return;
     const url = window.location.href;
     const text = `Join ${game.title} and make your baby predictions! 👶💕`;
-    if (navigator.share) { try { await navigator.share({ title: game.title, text, url }); setShared(true); window.setTimeout(() => setShared(false), 1800); } catch {} return; }
-    await navigator.clipboard.writeText(`${text} ${url}`); setShared(true); window.setTimeout(() => setShared(false), 1800);
+    setShareError('');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: game.title, text, url });
+        setShared(true);
+        window.setTimeout(() => setShared(false), 2200);
+        return;
+      }
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable.');
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      setShared(true);
+      window.setTimeout(() => setShared(false), 2200);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setShareError('Sharing didn’t open and we couldn’t copy the link. Please use your browser’s Share option or copy the page URL.');
+    }
   }
 
   if (loading) return <main className="min-h-screen bg-[#fffaf7] px-6 py-12"><div className="mx-auto max-w-lg text-center text-slate-500">Loading game…</div></main>;
@@ -48,6 +63,7 @@ export default function PublicGamePage() {
 
   return <main className="min-h-screen px-4 py-6 text-slate-900 sm:px-6 sm:py-10" style={{ background: bg }}>
     <div className="mx-auto max-w-2xl">
+      {shareError && <p role="alert" className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{shareError}</p>}
       <div className="overflow-hidden bg-white shadow-sm ring-1 ring-slate-100" style={{ borderRadius: radius }}>
         {backgroundUrl && <img src={backgroundUrl} alt="" className="h-56 w-full object-cover sm:h-64" />}
         <div className="relative overflow-hidden p-5 text-center sm:p-12" style={{ background: backgroundUrl ? undefined : bg }}>
