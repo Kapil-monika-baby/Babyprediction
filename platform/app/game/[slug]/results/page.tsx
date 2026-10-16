@@ -21,6 +21,7 @@ export default function PublicResultsPage() {
   const [found, setFound] = useState(true);
   const [view, setView] = useState<'top' | 'all'>('top');
   const [shared, setShared] = useState(false);
+  const [shareError, setShareError] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -58,10 +59,22 @@ export default function PublicResultsPage() {
     const text = winners.length && winners[0].score > 0
       ? `🏆 ${title} — the winner is ${winners.map(w => w.guest_name).join(', ')}! See the full prediction results:`
       : `🎉 ${title} — see who predicted the baby best!`;
+    setShareError('');
     try {
-      if (navigator.share) await navigator.share({ title: `${title} Results`, text, url });
-      else { await navigator.clipboard.writeText(url); setShared(true); setTimeout(() => setShared(false), 2200); }
-    } catch {}
+      if (navigator.share) {
+        await navigator.share({ title: `${title} Results`, text, url });
+        setShared(true);
+        window.setTimeout(() => setShared(false), 2200);
+        return;
+      }
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable.');
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      setShared(true);
+      window.setTimeout(() => setShared(false), 2200);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setShareError('Sharing didn’t open and we couldn’t copy the link. Please use your browser’s Share option or copy the page URL.');
+    }
   }
 
   if (loading) return <main className="min-h-screen bg-[#fffaf7] px-6 py-12 text-center text-slate-500">Loading results…</main>;
@@ -90,7 +103,8 @@ export default function PublicResultsPage() {
             <button type="button" onClick={shareResults} className="rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-sm">📤 Share results</button>
             <a href={`/game/${slug}`} className="rounded-2xl border border-slate-200 px-6 py-3 font-semibold">Back to game</a>
           </div>
-          {shared && <p className="mt-3 text-sm font-semibold text-emerald-600">✓ Results link copied!</p>}
+          {shared && <p className="mt-3 text-sm font-semibold text-emerald-600" role="status">✓ Share action completed or results link copied.</p>}
+          {shareError && <p role="alert" className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{shareError}</p>}
         </div>
 
         {Object.values(actualResults).some(value => typeof value === 'string' && value.trim()) && <section className="border-t border-slate-100 px-4 py-4 sm:px-7 sm:py-5">
