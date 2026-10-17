@@ -49,31 +49,39 @@ export default function PlayGamePage() {
 
   useEffect(() => {
     async function load() {
-      if (!slug) return;
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .select('id,title,welcome_message')
-        .eq('slug', slug)
-        .eq('status', 'published')
-        .maybeSingle();
-      if (gameError || !gameData) {
-        setError('This game could not be found or is not published yet.');
+      if (!slug) {
+        setError('This game link is missing. Please ask the parents for a new link.');
         setLoading(false);
         return;
       }
-      const { data: questionData, error: questionError } = await supabase
-        .from('game_questions')
-        .select('id,type,title,description,position,options')
-        .eq('game_id', gameData.id)
-        .eq('enabled', true)
-        .order('position', { ascending: true });
-      if (questionError || !questionData?.length) {
-        setError('This game has no active questions yet.');
-      } else {
+      try {
+        const { data: gameData, error: gameError } = await supabase
+          .from('games')
+          .select('id,title,welcome_message')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .maybeSingle();
+        if (gameError || !gameData) {
+          setError('This game could not be found or is no longer accepting predictions. Please check the link with the parents.');
+          return;
+        }
+        const { data: questionData, error: questionError } = await supabase
+          .from('game_questions')
+          .select('id,type,title,description,position,options')
+          .eq('game_id', gameData.id)
+          .eq('enabled', true)
+          .order('position', { ascending: true });
+        if (questionError || !questionData?.length) {
+          setError('This game is not ready for predictions yet. Please ask the parents to check it.');
+          return;
+        }
         setGame(gameData);
         setQuestions(questionData);
+      } catch {
+        setError('We couldn’t load this game. Check your internet connection and try opening the link again.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, [slug]);
@@ -88,22 +96,31 @@ export default function PlayGamePage() {
       return;
     }
 
-    setSubmitting(true);
-    const storedAnswers = { ...answers };
-    for (const [questionId, story] of Object.entries(followUps)) {
-      if (story.trim()) storedAnswers[`__followup__${questionId}`] = story.trim();
-    }
-    const { error: predictionError } = await supabase.from('predictions').insert({
-      game_id: game?.id,
-      guest_name: name.trim(),
-      answers: storedAnswers,
-    });
-    setSubmitting(false);
-    if (predictionError) {
-      setError(predictionError.message);
+    if (!name.trim()) {
+      setError('Please enter your name before continuing.');
       return;
     }
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      const storedAnswers = { ...answers };
+      for (const [questionId, story] of Object.entries(followUps)) {
+        if (story.trim()) storedAnswers[`__followup__${questionId}`] = story.trim();
+      }
+      const { error: predictionError } = await supabase.from('predictions').insert({
+        game_id: game?.id,
+        guest_name: name.trim(),
+        answers: storedAnswers,
+      });
+      if (predictionError) {
+        setError('We couldn’t submit your predictions. Your answers are still here—please try again. If it keeps happening, ask the parents to check that the game is still open.');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError('A connection problem stopped your predictions from being submitted. Your answers are still here—check your internet and try again.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (loading) return <main className="min-h-screen bg-[#fffaf7] px-6 py-12 text-center text-slate-500">Loading your prediction game…</main>;
@@ -134,8 +151,11 @@ export default function PlayGamePage() {
         <textarea id={`followup-${question.id}`} value={followUps[question.id] || ''} onChange={e => setFollowUps({ ...followUps, [question.id]: e.target.value.slice(0, 280) })} maxLength={280} rows={3} className="mt-3 w-full resize-y rounded-xl border border-rose-100 bg-white px-3 py-3 text-sm outline-none focus:border-rose-300" placeholder="Share a story… (optional)" />
         <p className="mt-1 text-right text-xs text-slate-400">{(followUps[question.id] || '').length}/280 · Optional</p>
       </div>
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-      <button disabled={submitting || !name.trim() || (question.type !== 'wishes' && !value)} className="mt-6 w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{submitting ? 'Submitting…' : step === questions.length - 1 ? 'Submit predictions' : 'Next prediction →'}</button>
+      {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-3 py-3 text-sm text-red-700">{error}</p>}
+      <div className="mt-6 flex gap-3">
+        {step > 0 && <button type="button" disabled={submitting} onClick={() => { setError(''); setStep(current => Math.max(0, current - 1)); }} className="rounded-2xl border border-slate-200 px-5 py-3 font-semibold disabled:opacity-50">← Back</button>}
+        <button type="submit" disabled={submitting || !name.trim() || (question.type !== 'wishes' && !value)} className="flex-1 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{submitting ? 'Submitting…' : step === questions.length - 1 ? 'Submit predictions' : 'Next prediction →'}</button>
+      </div>
     </form>
   </div></main>;
 }
