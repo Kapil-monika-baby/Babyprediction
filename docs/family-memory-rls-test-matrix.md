@@ -16,6 +16,8 @@ Use three isolated test users: parent A, accepted contributor B, unrelated user 
 | B reads timeline media | Allow |
 | C downloads from private memory-media bucket | Deny |
 | B deletes another contributor's media | Deny |
+| B deletes their own memory/media while an accepted member | Allow |
+| B tries to delete their own memory/media after A removes membership | Deny |
 | A removes B from membership | B's subsequent DB/storage reads denied |
 | C queries invitation/share tables | Deny / zero rows |
 | Invalid, expired or revoked share token | Deny |
