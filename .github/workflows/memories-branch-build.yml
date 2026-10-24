@@ -1,0 +1,38 @@
+name: Memories branch build check
+
+on:
+  push:
+    branches:
+      - ios/ios-app-foundation
+    paths:
+      - 'platform/**'
+      - '.github/workflows/memories-branch-build.yml'
+  pull_request:
+    branches:
+      - ios/ios-app-foundation
+    paths:
+      - 'platform/**'
+      - '.github/workflows/memories-branch-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run production build
+        run: npm run build
