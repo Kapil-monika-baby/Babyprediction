@@ -34,5 +34,7 @@ jobs:
           cache-dependency-path: platform/package.json
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Run ESLint
+        run: npm run lint
       - name: Run production build
         run: npm run build
