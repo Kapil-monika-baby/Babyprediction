@@ -7,6 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function missingMemorySchema(error: { code?: string } | null): boolean {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
+
 function storagePath(value: unknown): string | null {
   if (typeof value !== "string" || !value.trim()) return null;
   const input = value.trim();
@@ -49,7 +53,7 @@ Deno.serve(async (req: Request) => {
     // Remove objects first; abort on Storage errors so the request can be retried safely.
     const { data: ownedTimelines, error: timelinesError } = await admin
       .from("memory_timelines").select("id").eq("owner_id", user.id);
-    if (timelinesError && timelinesError.code !== "42P01") throw timelinesError;
+    if (timelinesError && !missingMemorySchema(timelinesError)) throw timelinesError;
     const timelineIds = (ownedTimelines || []).map((row: { id: string }) => row.id);
 
     let memoryQuery = admin.from("memory_items").select("id,timeline_id,created_by");
@@ -59,12 +63,12 @@ Deno.serve(async (req: Request) => {
       memoryQuery = memoryQuery.eq("created_by", user.id);
     }
     const { data: memories, error: memoriesError } = await memoryQuery;
-    if (memoriesError && memoriesError.code !== "42P01") throw memoriesError;
+    if (memoriesError && !missingMemorySchema(memoriesError)) throw memoriesError;
     const memoryIds = (memories || []).map((row: { id: string }) => row.id);
     if (memoryIds.length) {
       const { data: mediaRows, error: mediaError } = await admin
         .from("memory_media").select("storage_path").in("memory_id", memoryIds);
-      if (mediaError && mediaError.code !== "42P01") throw mediaError;
+      if (mediaError && !missingMemorySchema(mediaError)) throw mediaError;
       const paths = (mediaRows || []).map((row: { storage_path: string }) => row.storage_path);
       if (paths.length) {
         const { error: cleanupError } = await admin.storage.from("memory-media").remove(paths);
@@ -81,10 +85,10 @@ Deno.serve(async (req: Request) => {
     }
     if (timelineIds.length) {
       const { error: deleteTimelinesError } = await admin.from("memory_timelines").delete().in("id", timelineIds);
-      if (deleteTimelinesError && deleteTimelinesError.code !== "42P01") throw deleteTimelinesError;
+      if (deleteTimelinesError && !missingMemorySchema(deleteTimelinesError)) throw deleteTimelinesError;
     }
     const { error: membershipsError } = await admin.from("memory_members").delete().eq("user_id", user.id);
-    if (membershipsError && membershipsError.code !== "42P01") throw membershipsError;
+    if (membershipsError && !missingMemorySchema(membershipsError)) throw membershipsError;
 
     const { data: games, error: gamesError } = await admin.from("games").select("id,welcome_background_path").eq("owner_id", user.id);
     if (gamesError) throw gamesError;
