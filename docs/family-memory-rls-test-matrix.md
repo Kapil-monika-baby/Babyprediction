@@ -1,6 +1,6 @@
 # GoodNews Memories — RLS and release test matrix
 
-Status: test plan only; no production migration or tests have been run.
+Status: implementation is on the isolated branch. The linked Supabase project currently has no Memories tables, so these are still staging acceptance tests; no production migration or live data tests have been run.
 
 Use three isolated test users: parent A, accepted contributor B, unrelated user C. Create A's timeline, a private memory and a media object in a disposable Supabase project.
 
@@ -27,11 +27,13 @@ Use three isolated test users: parent A, accepted contributor B, unrelated user 
 | Existing game create, guest submission, dashboard and results | No regression |
 
 ## Required before production
-1. Implement server-side invitation acceptance and public-share resolution. Never expose token hashes or add broad anonymous SELECT policies.
-2. Storage object deletion is not handled by SQL cascades. Add a secure cleanup flow/Edge Function and test retry behaviour.
-3. Inspect/update the account-deletion Edge Function to clean up memory-media objects and rows before enabling Memories.
-4. Apply migration only to a disposable/staging Supabase project first; it has not been run.
+1. Verify server-side invitation acceptance: email must be confirmed and match the invitation, token must be one-time, unrevoked and unexpired; confirm token hashes are never exposed.
+2. Verify the private Storage bucket and signed URL behavior, including contributor deletion of their own media and denial of unrelated users.
+3. Test account-deletion cleanup, including partial Storage failures, retries, missing schema compatibility and pagination. The branch contains the cleanup logic, but the deployed function has not been updated.
+4. Apply migrations only to a disposable/staging Supabase project first; the linked project checked for this review has no Memories tables and has not been migrated.
 5. Confirm child ownership conventions before linking timelines to existing babies.
 6. Validate 50 MiB video limit, playback support and storage cost before enabling video.
+7. Test the full sign-up/login invitation journey in a browser, including unverified email and invited email mismatch.
+8. Keep public share links disabled until a separate server-side share-token resolver and scoped item/media access are implemented.
 
 Do not merge to production or apply in production until all denial tests pass and existing prediction flows pass regression checks.
