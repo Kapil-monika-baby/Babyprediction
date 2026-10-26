@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import LoginForm from "../auth/login-form";
 import { supabase } from "../../lib/supabase-browser";
 
+function destinationAfterLogin() {
+  const requested = new URLSearchParams(window.location.search).get("next");
+  // Only allow local app paths; never redirect to an external URL.
+  return requested && requested.startsWith("/") && !requested.startsWith("//")
+    ? requested
+    : "/dashboard";
+}
+
 export default function LoginPage() {
   const [ready, setReady] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -18,7 +26,7 @@ export default function LoginPage() {
       if (session) {
         redirectStarted = true;
         setRedirecting(true);
-        window.location.replace("/dashboard");
+        window.location.replace(destinationAfterLogin());
         return;
       }
       setReady(true);
