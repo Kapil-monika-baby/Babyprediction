@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase-browser';
 
 type Timeline = { id: string; title: string; owner_id: string };
@@ -15,7 +15,6 @@ const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/q
 export default function MemoryTimelinePage() {
   const params = useParams<{ timelineId: string }>();
   const timelineId = params.timelineId;
-  const router = useRouter();
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [items, setItems] = useState<Memory[]>([]);
   const [media, setMedia] = useState<Record<string, string>>({});
