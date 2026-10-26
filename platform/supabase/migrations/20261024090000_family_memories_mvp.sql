@@ -9,7 +9,7 @@ create table if not exists public.memory_timelines (
 create table if not exists public.memory_members (
  id uuid primary key default gen_random_uuid(), timeline_id uuid not null references public.memory_timelines(id) on delete cascade,
  user_id uuid not null references auth.users(id) on delete cascade, role text not null default 'contributor' check (role in ('contributor')),
- invited_by uuid not null references auth.users(id) on delete restrict, accepted_at timestamptz not null default now(),
+ invited_by uuid null references auth.users(id) on delete set null, accepted_at timestamptz not null default now(),
  created_at timestamptz not null default now(), unique (timeline_id,user_id)
 );
 create table if not exists public.memory_items (
