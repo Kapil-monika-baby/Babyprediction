@@ -35,6 +35,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Run ESLint
-        run: npx eslint app/memories/page.tsx 'app/memories/[timelineId]/page.tsx' --rule 'react-hooks/set-state-in-effect: off'
+        run: >-
+          npx eslint app/memories/page.tsx 'app/memories/[timelineId]/page.tsx' --rule 'react-hooks/set-state-in-effect: off'
       - name: Run production build
         run: npm run build
