@@ -36,14 +36,13 @@ async function removeStoragePaths(
   }
 }
 
-
 const PAGE_SIZE = 500;
 const ID_CHUNK_SIZE = 100;
 
 type QueryError = { code?: string; message?: string };
 
 async function fetchAllRows<T>(
-  fetchPage: (from: number, to: number) => Promise<{ data: T[] | null; error: QueryError | null }>,
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: QueryError | null }>,
 ): Promise<{ data: T[] | null; error: QueryError | null }> {
   const rows: T[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
