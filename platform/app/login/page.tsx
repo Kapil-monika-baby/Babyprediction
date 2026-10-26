@@ -7,9 +7,15 @@ import { supabase } from "../../lib/supabase-browser";
 function destinationAfterLogin() {
   const requested = new URLSearchParams(window.location.search).get("next");
   // Only allow local app paths; never redirect to an external URL.
-  return requested && requested.startsWith("/") && !requested.startsWith("//")
-    ? requested
-    : "/dashboard";
+  if (!requested || !requested.startsWith('/')) return '/dashboard';
+  try {
+    const destination = new URL(requested, window.location.origin);
+    // URL parsing also normalizes backslashes; compare origins to block open redirects.
+    if (destination.origin !== window.location.origin) return '/dashboard';
+    return destination.pathname + destination.search + destination.hash;
+  } catch {
+    return '/dashboard';
+  }
 }
 
 export default function LoginPage() {
