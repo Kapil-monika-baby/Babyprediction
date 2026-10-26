@@ -6,13 +6,13 @@ on:
       - ios/ios-app-foundation
     paths:
       - 'platform/**'
-      - '.github/workflows/memories-branch-build.yml'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - ios/ios-app-foundation
     paths:
       - 'platform/**'
-      - '.github/workflows/memories-branch-build.yml'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
