@@ -42,6 +42,6 @@ jobs:
         with:
           deno-version: v2.x
       - name: Type-check Supabase Edge Functions
-        run: deno check supabase/functions/delete-account/index.ts supabase/functions/create-memory-invitation/index.ts supabase/functions/accept-memory-invitation/index.ts
+        run: deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts supabase/functions/create-memory-invitation/index.ts supabase/functions/accept-memory-invitation/index.ts
       - name: Run production build
         run: npm run build
