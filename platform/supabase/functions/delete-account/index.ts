@@ -36,6 +36,33 @@ async function removeStoragePaths(
   }
 }
 
+
+const PAGE_SIZE = 500;
+const ID_CHUNK_SIZE = 100;
+
+type QueryError = { code?: string; message?: string };
+
+async function fetchAllRows<T>(
+  fetchPage: (from: number, to: number) => Promise<{ data: T[] | null; error: QueryError | null }>,
+): Promise<{ data: T[] | null; error: QueryError | null }> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1);
+    if (error) return { data: null, error };
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return { data: rows, error: null };
+  }
+}
+
+function chunks<T>(values: T[], size = ID_CHUNK_SIZE): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    result.push(values.slice(index, index + size));
+  }
+  return result;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -64,59 +91,93 @@ Deno.serve(async (req: Request) => {
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
   try {
-    // Memories media is stored outside Postgres, so FK cascades cannot remove objects.
-    // Remove objects first; abort on Storage errors so the request can be retried safely.
-    const { data: ownedTimelines, error: timelinesError } = await admin
-      .from("memory_timelines").select("id").eq("owner_id", user.id);
-    if (timelinesError && !missingMemorySchema(timelinesError)) throw timelinesError;
-    const timelineIds = (ownedTimelines || []).map((row: { id: string }) => row.id);
+    // Page every query: PostgREST applies a default row cap, so a single select
+    // can silently miss data and leave media behind during account deletion.
+    const timelineResult = await fetchAllRows<{ id: string }>((from, to) =>
+      admin.from("memory_timelines").select("id").eq("owner_id", user.id).range(from, to));
+    if (timelineResult.error && !missingMemorySchema(timelineResult.error)) throw timelineResult.error;
+    const timelineIds = (timelineResult.data ?? []).map((row) => row.id);
+    const timelineIdSet = new Set(timelineIds);
 
-    let memoryQuery = admin.from("memory_items").select("id,timeline_id,created_by");
-    if (timelineIds.length) {
-      memoryQuery = memoryQuery.or(`created_by.eq.${user.id},timeline_id.in.(${timelineIds.join(",")})`);
-    } else {
-      memoryQuery = memoryQuery.eq("created_by", user.id);
-    }
-    const { data: memories, error: memoriesError } = await memoryQuery;
-    if (memoriesError && !missingMemorySchema(memoriesError)) throw memoriesError;
-    const memoryIds = (memories || []).map((row: { id: string }) => row.id);
-    if (memoryIds.length) {
-      const { data: mediaRows, error: mediaError } = await admin
-        .from("memory_media").select("storage_path").in("memory_id", memoryIds);
-      if (mediaError && !missingMemorySchema(mediaError)) throw mediaError;
-      const paths = (mediaRows || []).map((row: { storage_path: string }) => row.storage_path);
-      if (paths.length) {
-        await removeStoragePaths(admin, "memory-media", paths);
+    type MemoryRow = { id: string; timeline_id: string; created_by: string };
+    const memoriesById = new Map<string, MemoryRow>();
+    const authoredResult = await fetchAllRows<MemoryRow>((from, to) =>
+      admin.from("memory_items").select("id,timeline_id,created_by")
+        .eq("created_by", user.id).range(from, to));
+    if (authoredResult.error && !missingMemorySchema(authoredResult.error)) throw authoredResult.error;
+    if (!authoredResult.error) {
+      for (const row of authoredResult.data ?? []) memoriesById.set(row.id, row);
+
+      // Query owned timelines in small ID chunks instead of constructing a huge OR
+      // expression. Deduplicate authored items that are also in an owned timeline.
+      for (const timelineChunk of chunks(timelineIds)) {
+        const result = await fetchAllRows<MemoryRow>((from, to) =>
+          admin.from("memory_items").select("id,timeline_id,created_by")
+            .in("timeline_id", timelineChunk).range(from, to));
+        if (result.error) {
+          if (!missingMemorySchema(result.error)) throw result.error;
+          memoriesById.clear();
+          break;
+        }
+        for (const row of result.data ?? []) memoriesById.set(row.id, row);
       }
-      const foreignMemoryIds = (memories || [])
-        .filter((row: { timeline_id: string; created_by: string }) =>
-          row.created_by === user.id && !timelineIds.includes(row.timeline_id))
-        .map((row: { id: string }) => row.id);
-      if (foreignMemoryIds.length) {
-        const { error: deleteItemsError } = await admin.from("memory_items").delete().in("id", foreignMemoryIds);
+    }
+
+    const memories = [...memoriesById.values()];
+    const memoryIds = memories.map((row) => row.id);
+    if (memoryIds.length) {
+      const mediaPaths: string[] = [];
+      let mediaSchemaMissing = false;
+      for (const memoryChunk of chunks(memoryIds)) {
+        const result = await fetchAllRows<{ storage_path: string }>((from, to) =>
+          admin.from("memory_media").select("storage_path")
+            .in("memory_id", memoryChunk).range(from, to));
+        if (result.error) {
+          if (missingMemorySchema(result.error)) {
+            mediaSchemaMissing = true;
+            break;
+          }
+          throw result.error;
+        }
+        mediaPaths.push(...(result.data ?? []).map((row) => row.storage_path));
+      }
+      // If the media table is not installed there are no media rows to enumerate.
+      if (!mediaSchemaMissing && mediaPaths.length) {
+        await removeStoragePaths(admin, "memory-media", [...new Set(mediaPaths)]);
+      }
+
+      const foreignMemoryIds = memories
+        .filter((row) => row.created_by === user.id && !timelineIdSet.has(row.timeline_id))
+        .map((row) => row.id);
+      for (const idChunk of chunks(foreignMemoryIds)) {
+        const { error: deleteItemsError } = await admin.from("memory_items").delete().in("id", idChunk);
         if (deleteItemsError) throw deleteItemsError;
       }
     }
-    if (timelineIds.length) {
-      const { error: deleteTimelinesError } = await admin.from("memory_timelines").delete().in("id", timelineIds);
+
+    for (const timelineChunk of chunks(timelineIds)) {
+      const { error: deleteTimelinesError } = await admin.from("memory_timelines").delete().in("id", timelineChunk);
       if (deleteTimelinesError && !missingMemorySchema(deleteTimelinesError)) throw deleteTimelinesError;
     }
     const { error: membershipsError } = await admin.from("memory_members").delete().eq("user_id", user.id);
     if (membershipsError && !missingMemorySchema(membershipsError)) throw membershipsError;
 
-    const { data: games, error: gamesError } = await admin.from("games").select("id,welcome_background_path").eq("owner_id", user.id);
-    if (gamesError) throw gamesError;
-    const gameIds = (games || []).map((game: { id: string }) => game.id);
+    const gamesResult = await fetchAllRows<{ id: string; welcome_background_path?: string | null }>((from, to) =>
+      admin.from("games").select("id,welcome_background_path").eq("owner_id", user.id).range(from, to));
+    if (gamesResult.error) throw gamesResult.error;
+    const games = gamesResult.data ?? [];
+    const gameIds = games.map((game) => game.id);
     const paths = new Set<string>();
-    for (const game of games || []) {
-      const path = storagePath((game as { welcome_background_path?: string }).welcome_background_path);
+    for (const game of games) {
+      const path = storagePath(game.welcome_background_path);
       if (path) paths.add(path);
     }
-    if (gameIds.length) {
-      const { data: questions, error: questionsError } = await admin.from("game_questions").select("background_path").in("game_id", gameIds);
-      if (questionsError) throw questionsError;
-      for (const question of questions || []) {
-        const path = storagePath((question as { background_path?: string }).background_path);
+    for (const gameChunk of chunks(gameIds)) {
+      const questionsResult = await fetchAllRows<{ background_path?: string | null }>((from, to) =>
+        admin.from("game_questions").select("background_path").in("game_id", gameChunk).range(from, to));
+      if (questionsResult.error) throw questionsResult.error;
+      for (const question of questionsResult.data ?? []) {
+        const path = storagePath(question.background_path);
         if (path) paths.add(path);
       }
     }
