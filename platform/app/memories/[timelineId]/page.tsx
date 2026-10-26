@@ -29,6 +29,9 @@ export default function MemoryTimelinePage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [currentUser, setCurrentUser] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -98,6 +101,35 @@ export default function MemoryTimelinePage() {
     setNotice('Memory saved privately.'); setSaving(false); await load();
   }
 
+  async function createInvitation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!timeline || timeline.owner_id !== currentUser || inviting) return;
+    setInviting(true); setError(''); setNotice(''); setInviteLink('');
+    const { data, error: inviteError } = await supabase.functions.invoke('create-memory-invitation', {
+      body: { timelineId: timeline.id, email: inviteEmail.trim().toLowerCase() },
+    });
+    if (inviteError || !data?.token) {
+      setError(data?.error || inviteError?.message || 'Could not create the invitation. Please retry.');
+      setInviting(false); return;
+    }
+    const link = window.location.origin + '/memories/invite?token=' + encodeURIComponent(data.token);
+    setInviteLink(link);
+    setNotice('Invitation link created. It expires ' + new Date(data.expiresAt).toLocaleString() + ' and only the invited email can accept it.');
+    setInviteEmail('');
+    setInviting(false);
+  }
+
+  async function copyInvitationLink() {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setError('');
+      setNotice('Invitation link copied. Share it privately with the invited person only.');
+    } catch {
+      setError('Automatic copy was blocked. Select the invitation link and copy it manually.');
+    }
+  }
+
   async function deleteMemory(memory: Memory) {
     if (timeline?.owner_id !== currentUser && memory.created_by !== currentUser) return;
     if (!window.confirm('Delete this memory? This cannot be undone.')) return;
@@ -117,6 +149,20 @@ export default function MemoryTimelinePage() {
     <header className="mt-6 rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">Your family story</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">{timeline?.title ?? 'Memories'}</h1><p className="mt-3 max-w-2xl leading-7 text-slate-700">A private place for the little things you never want to forget. Every new memory starts private.</p></header>
     {error && <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
     {notice && <div role="status" className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</div>}
+    {timeline?.owner_id === currentUser && <section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-amber-100 sm:p-7">
+      <h2 className="text-xl font-extrabold">Invite family</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-600">Invite a trusted family member by email. The link expires in seven days and can only be accepted by an account using that email. Email delivery is not configured yet, so you can copy and share the link privately.</p>
+      <form onSubmit={createInvitation} className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <label htmlFor="memory-invite-email" className="sr-only">Family member email address</label>
+        <input id="memory-invite-email" type="email" autoComplete="email" required maxLength={320} value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="family.member@example.com" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"/>
+        <button disabled={inviting || loading} className="rounded-xl bg-amber-500 px-5 py-3 font-bold text-white hover:bg-amber-600 disabled:opacity-50">{inviting ? 'Creating link…' : 'Create invitation link'}</button>
+      </form>
+      {inviteLink && <div className="mt-4 rounded-2xl bg-amber-50 p-4">
+        <label htmlFor="memory-invite-link" className="block text-sm font-bold">One-time family invitation link</label>
+        <input id="memory-invite-link" readOnly value={inviteLink} onFocus={e => e.currentTarget.select()} className="mt-2 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm"/>
+        <button type="button" onClick={() => void copyInvitationLink()} className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700">Copy invitation link</button>
+      </div>}
+    </section>}
     <section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
       <h2 className="text-xl font-extrabold">Add a memory</h2><p className="mt-1 text-sm text-slate-600">Write a story or save a milestone, photo or short video.</p>
       <form onSubmit={addMemory} className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -135,6 +181,6 @@ export default function MemoryTimelinePage() {
         {item.caption && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">{item.caption}</p>}
         {(timeline?.owner_id === currentUser || item.created_by === currentUser) && <button onClick={() => void deleteMemory(item)} className="mt-4 text-sm font-bold text-red-600 hover:text-red-800">Delete memory</button>}</div></article>)}</div>}
     </section>
-    <p className="mt-8 text-center text-xs leading-5 text-slate-500">This timeline is private. Public links and family invitations are not enabled yet.</p>
+    <p className="mt-8 text-center text-xs leading-5 text-slate-500">This timeline is private. Family access requires an email-bound invitation; public share links remain disabled.</p>
   </div></main>;
 }
