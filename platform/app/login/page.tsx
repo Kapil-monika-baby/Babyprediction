@@ -62,7 +62,7 @@ export default function LoginPage() {
           <h1 className="mt-2 text-3xl font-bold">Log in to your baby game</h1>
           <p className="mt-3 text-slate-600">Use your parent account to manage games and see predictions.</p>
           <LoginForm />
-          <p className="mt-6 text-center text-sm text-slate-500">New here? <a href="/signup" className="font-semibold text-slate-900">Create an account</a></p>
+          <p className="mt-6 text-center text-sm text-slate-500">New here? <a href={"/signup?next=" + encodeURIComponent(destinationAfterLogin())} className="font-semibold text-slate-900">Create an account</a></p>
         </div>
       </div>
     </main>
