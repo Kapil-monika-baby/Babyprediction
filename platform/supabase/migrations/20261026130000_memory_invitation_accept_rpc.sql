@@ -11,10 +11,20 @@ as $$
 declare
   v_invitation public.memory_invitations%rowtype;
   v_user_id uuid := auth.uid();
-  v_email text := lower(trim(coalesce(auth.jwt() ->> 'email', '')));
+  v_email text;
+  v_email_confirmed boolean;
 begin
   if v_user_id is null then
     raise exception using errcode = '28000', message = 'Authentication required';
+  end if;
+
+  select lower(trim(coalesce(email, ''))), email_confirmed_at is not null
+    into v_email, v_email_confirmed
+    from auth.users
+   where id = v_user_id;
+
+  if not found or not coalesce(v_email_confirmed, false) then
+    raise exception using errcode = '42501', message = 'Verify your email address before accepting an invitation';
   end if;
 
   if p_token_hash is null or p_token_hash !~ '^[0-9a-f]{64}$' then
