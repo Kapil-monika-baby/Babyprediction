@@ -21,6 +21,21 @@ function storagePath(value: unknown): string | null {
   return input.replace(/^\/+/, "");
 }
 
+async function removeStoragePaths(
+  admin: ReturnType<typeof createClient>,
+  bucket: string,
+  paths: string[],
+): Promise<void> {
+  // Keep each request bounded; retrying after a partial failure is safe because
+  // the database rows remain until every batch has completed successfully.
+  const batchSize = 100;
+  for (let index = 0; index < paths.length; index += batchSize) {
+    const batch = paths.slice(index, index + batchSize);
+    const { error } = await admin.storage.from(bucket).remove(batch);
+    if (error) throw error;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -71,8 +86,7 @@ Deno.serve(async (req: Request) => {
       if (mediaError && !missingMemorySchema(mediaError)) throw mediaError;
       const paths = (mediaRows || []).map((row: { storage_path: string }) => row.storage_path);
       if (paths.length) {
-        const { error: cleanupError } = await admin.storage.from("memory-media").remove(paths);
-        if (cleanupError) throw cleanupError;
+        await removeStoragePaths(admin, "memory-media", paths);
       }
       const foreignMemoryIds = (memories || [])
         .filter((row: { timeline_id: string; created_by: string }) =>
@@ -107,8 +121,7 @@ Deno.serve(async (req: Request) => {
       }
     }
     if (paths.size) {
-      const { error: storageError } = await admin.storage.from("game-images").remove([...paths]);
-      if (storageError) throw storageError;
+      await removeStoragePaths(admin, "game-images", [...paths]);
     }
 
     // The profile's FK cascades through owned games, questions, results,
