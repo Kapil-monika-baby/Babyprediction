@@ -1,6 +1,6 @@
 name: Memories branch build check
 
-on:
+'on':
   workflow_dispatch:
   push:
     branches:
