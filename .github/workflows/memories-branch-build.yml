@@ -1,6 +1,7 @@
 name: Memories branch build check
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - ios/ios-app-foundation
