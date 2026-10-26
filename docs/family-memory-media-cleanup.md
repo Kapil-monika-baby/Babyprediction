@@ -28,3 +28,4 @@ Postgres cascades do not delete Storage objects. Storage removal is therefore an
 7. Invalid/expired JWT cannot trigger cleanup; request body cannot select another user.
 8. Verify no memory-media objects remain under any timeline owned by the deleted user, and no orphaned media rows remain for authored items.
 9. Test schema-not-installed compatibility and both missing-relation error shapes.
+10. Pagination: create more than 500 owned timelines/items/media rows and enough game questions to span multiple pages; confirm every Storage object is removed and no rows are skipped.
