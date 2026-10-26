@@ -1,3 +1,4 @@
+/// <reference lib="deno.ns" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -22,7 +23,7 @@ function storagePath(value: unknown): string | null {
 }
 
 async function removeStoragePaths(
-  admin: ReturnType<typeof createClient>,
+  admin: Pick<ReturnType<typeof createClient>, "storage">,
   bucket: string,
   paths: string[],
 ): Promise<void> {
