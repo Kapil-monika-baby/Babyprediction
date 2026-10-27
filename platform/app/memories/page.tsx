@@ -31,7 +31,7 @@ export default function MemoriesPage() {
         supabase.from('babies').select('id,nickname,parent_one_name,parent_two_name').eq('owner_id', user.id).order('created_at', { ascending: false })
       ]);
       if (!active) return;
-      if (timelineResult.error) setError('Memories is not ready yet. The private Memories database migration must be applied before you can create a timeline.');
+      if (timelineResult.error) setError('Could not load your timelines. Please refresh; if the issue continues, contact support.');
       else setTimelines(timelineResult.data ?? []);
       if (!babyResult.error) setBabies(babyResult.data ?? []);
       setLoading(false);
@@ -43,14 +43,29 @@ export default function MemoriesPage() {
   async function createTimeline(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true); setError('');
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.replace('/login?next=%2Fmemories'); return; }
-    const payload: { owner_id: string; title: string; baby_id?: string | null } = { owner_id: user.id, title: title.trim() || 'Family Memories' };
-    if (babyId) payload.baby_id = babyId;
-    const { data, error: insertError } = await supabase.from('memory_timelines').insert(payload).select('id').single();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      setSaving(false);
+      window.location.replace('/login?next=%2Fmemories');
+      return;
+    }
+    const { data, error: insertError } = await supabase.rpc('create_memory_timeline', {
+      p_title: title.trim() || 'Family Memories',
+      p_baby_id: babyId || null
+    });
     setSaving(false);
-    if (insertError) { setError(insertError.message.includes('duplicate') ? 'A timeline already exists for this child.' : insertError.message); return; }
-    router.push('/memories/' + data.id);
+    if (insertError) {
+      setError(insertError.message.includes('duplicate')
+        ? 'A timeline already exists for this child.'
+        : insertError.message);
+      return;
+    }
+    const timeline = Array.isArray(data) ? data[0] : data;
+    if (!timeline?.id) {
+      setError('Timeline creation returned no ID. Please refresh and try again.');
+      return;
+    }
+    router.push('/memories/' + timeline.id);
   }
 
   return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-12">
