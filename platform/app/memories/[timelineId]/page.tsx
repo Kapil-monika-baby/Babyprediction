@@ -26,6 +26,7 @@ export default function MemoryTimelinePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [accessDenied, setAccessDenied] = useState(false);
   const [notice, setNotice] = useState('');
   const [currentUser, setCurrentUser] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
@@ -35,18 +36,18 @@ export default function MemoryTimelinePage() {
   const load = useCallback(async () => {
     // Clear prior timeline state before checking access. This prevents controls
     // from a previously loaded timeline lingering if the next timeline is denied.
-    setLoading(true); setError(''); setNotice('');
+    setLoading(true); setError(''); setNotice(''); setAccessDenied(false);
     setTimeline(null); setItems([]); setMedia({});
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.replace('/login?next=' + encodeURIComponent('/memories/' + timelineId)); return; }
     setCurrentUser(user.id);
     const { data: timelineData, error: timelineError } = await supabase.from('memory_timelines').select('id,title,owner_id').eq('id', timelineId).single();
     if (timelineError || !timelineData) {
-      setTimeline(null); setItems([]); setMedia({});
+      setTimeline(null); setItems([]); setMedia({}); setAccessDenied(true);
       setError('This timeline is unavailable, or you do not have permission to view it.');
       setLoading(false); return;
     }
-    setTimeline(timelineData);
+    setTimeline(timelineData); setAccessDenied(false);
     const { data: memoryData, error: memoryError } = await supabase.from('memory_items').select('id,kind,caption,occurred_on,milestone_type,created_at,created_by').eq('timeline_id', timelineId).is('deleted_at', null).order('occurred_on', { ascending: false });
     if (memoryError) { setError(memoryError.message); setLoading(false); return; }
     const rows = memoryData ?? [];
@@ -155,7 +156,7 @@ export default function MemoryTimelinePage() {
     <header className="mt-6 rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">Your family story</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">{timeline?.title ?? 'Memories'}</h1><p className="mt-3 max-w-2xl leading-7 text-slate-700">A private place for the little things you never want to forget. Every new memory starts private.</p></header>
     {error && <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
     {notice && <div role="status" className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</div>}
-    {timeline?.owner_id === currentUser && <section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-amber-100 sm:p-7">
+    {!accessDenied && timeline?.owner_id === currentUser && <section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-amber-100 sm:p-7">
       <h2 className="text-xl font-extrabold">Invite family</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">Invite a trusted family member by email. The link expires in seven days and can only be accepted by an account using that email. Email delivery is not configured yet, so you can copy and share the link privately.</p>
       <form onSubmit={createInvitation} className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -169,7 +170,7 @@ export default function MemoryTimelinePage() {
         <button type="button" onClick={() => void copyInvitationLink()} className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700">Copy invitation link</button>
       </div>}
     </section>}
-    {timeline && <><section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
+    {!accessDenied && timeline && <><section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
       <h2 className="text-xl font-extrabold">Add a memory</h2><p className="mt-1 text-sm text-slate-600">Write a story or save a milestone, photo or short video.</p>
       <form onSubmit={addMemory} className="mt-5 grid gap-4 sm:grid-cols-2">
         <div><label htmlFor="memory-kind" className="block text-sm font-bold">Memory type</label><select id="memory-kind" value={kind} onChange={e => setKind(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3"><option value="story">Written story</option><option value="milestone">Milestone</option><option value="photo">Photo</option><option value="video">Video</option></select></div>
