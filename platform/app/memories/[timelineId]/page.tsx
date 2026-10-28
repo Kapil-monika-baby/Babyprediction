@@ -162,7 +162,7 @@ export default function MemoryTimelinePage() {
         <button type="button" onClick={() => void copyInvitationLink()} className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-700">Copy invitation link</button>
       </div>}
     </section>}
-    <section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
+    {timeline && <><section className="mt-7 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
       <h2 className="text-xl font-extrabold">Add a memory</h2><p className="mt-1 text-sm text-slate-600">Write a story or save a milestone, photo or short video.</p>
       <form onSubmit={addMemory} className="mt-5 grid gap-4 sm:grid-cols-2">
         <div><label htmlFor="memory-kind" className="block text-sm font-bold">Memory type</label><select id="memory-kind" value={kind} onChange={e => setKind(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3"><option value="story">Written story</option><option value="milestone">Milestone</option><option value="photo">Photo</option><option value="video">Video</option></select></div>
@@ -181,5 +181,6 @@ export default function MemoryTimelinePage() {
         {(timeline?.owner_id === currentUser || item.created_by === currentUser) && <button onClick={() => void deleteMemory(item)} className="mt-4 text-sm font-bold text-red-600 hover:text-red-800">Delete memory</button>}</div></article>)}</div>}
     </section>
     <p className="mt-8 text-center text-xs leading-5 text-slate-500">This timeline is private. Family access requires an email-bound invitation; public share links remain disabled.</p>
+    </>}
   </div></main>;
 }
