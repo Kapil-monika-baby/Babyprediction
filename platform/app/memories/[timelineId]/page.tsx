@@ -33,12 +33,19 @@ export default function MemoryTimelinePage() {
   const [inviting, setInviting] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true); setError('');
+    // Clear prior timeline state before checking access. This prevents controls
+    // from a previously loaded timeline lingering if the next timeline is denied.
+    setLoading(true); setError(''); setNotice('');
+    setTimeline(null); setItems([]); setMedia({});
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.replace('/login?next=' + encodeURIComponent('/memories/' + timelineId)); return; }
     setCurrentUser(user.id);
     const { data: timelineData, error: timelineError } = await supabase.from('memory_timelines').select('id,title,owner_id').eq('id', timelineId).single();
-    if (timelineError || !timelineData) { setError('This timeline is unavailable, or you do not have permission to view it.'); setLoading(false); return; }
+    if (timelineError || !timelineData) {
+      setTimeline(null); setItems([]); setMedia({});
+      setError('This timeline is unavailable, or you do not have permission to view it.');
+      setLoading(false); return;
+    }
     setTimeline(timelineData);
     const { data: memoryData, error: memoryError } = await supabase.from('memory_items').select('id,kind,caption,occurred_on,milestone_type,created_at,created_by').eq('timeline_id', timelineId).is('deleted_at', null).order('occurred_on', { ascending: false });
     if (memoryError) { setError(memoryError.message); setLoading(false); return; }
