@@ -151,6 +151,14 @@ export default function MemoryTimelinePage() {
     setNotice('Memory deleted.'); await load();
   }
 
+  if (accessDenied) {
+    return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-12"><div className="mx-auto max-w-4xl">
+      <Link href="/memories" className="text-sm font-semibold text-slate-500 hover:text-slate-800">← All timelines</Link>
+      <header className="mt-6 rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">Your family story</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">Memories</h1><p className="mt-3 max-w-2xl leading-7 text-slate-700">A private place for the little things you never want to forget. Every new memory starts private.</p></header>
+      <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error || 'This timeline is unavailable, or you do not have permission to view it.'}</div>
+    </div></main>;
+  }
+
   return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-12"><div className="mx-auto max-w-4xl">
     <Link href="/memories" className="text-sm font-semibold text-slate-500 hover:text-slate-800">← All timelines</Link>
     <header className="mt-6 rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">Your family story</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">{timeline?.title ?? 'Memories'}</h1><p className="mt-3 max-w-2xl leading-7 text-slate-700">A private place for the little things you never want to forget. Every new memory starts private.</p></header>
