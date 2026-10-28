@@ -3,6 +3,20 @@
 import { FormEvent, useState } from 'react';
 import { supabase } from '../../lib/supabase-browser';
 
+function destinationAfterSignup() {
+  const requested = new URLSearchParams(window.location.search).get('next');
+  // Only allow local app paths; never redirect to an external URL.
+  if (!requested || !requested.startsWith('/')) return '/dashboard';
+  try {
+    const destination = new URL(requested, window.location.origin);
+    // URL parsing also normalizes backslashes; compare origins to block open redirects.
+    if (destination.origin !== window.location.origin) return '/dashboard';
+    return destination.pathname + destination.search + destination.hash;
+  } catch {
+    return '/dashboard';
+  }
+}
+
 export default function SignupForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,8 +29,8 @@ export default function SignupForm() {
     setLoading(true);
     setMessage('');
     const emailRedirectTo = typeof window !== 'undefined'
-      ? `${window.location.origin}/login`
-      : 'https://babyprediction.vercel.app/login';
+      ? `${window.location.origin}/login?next=${encodeURIComponent(destinationAfterSignup())}`
+      : 'https://babyprediction.vercel.app/login?next=%2Fdashboard';
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -27,7 +41,7 @@ export default function SignupForm() {
     setLoading(false);
     setMessage(error
       ? error.message
-      : 'Account created. Check your email. The verification link will return you to Baby Prediction.');
+      : 'Account created. Check your email. The verification link will return you to your requested page after you sign in.');
   }
 
   return <form onSubmit={submit} className="mt-8 space-y-4">

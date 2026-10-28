@@ -1,0 +1,47 @@
+name: Memories branch build check
+
+on:
+  push:
+    branches:
+      - ios/ios-app-foundation
+    paths:
+      - 'platform/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - ios/ios-app-foundation
+    paths:
+      - 'platform/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run ESLint
+        run: >-
+          npx eslint app/memories/page.tsx 'app/memories/[timelineId]/page.tsx' app/memories/invite/page.tsx --rule 'react-hooks/set-state-in-effect: off'
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Supabase Edge Functions
+        run: deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts supabase/functions/create-memory-invitation/index.ts supabase/functions/accept-memory-invitation/index.ts
+      - name: Run production build
+        run: npm run build

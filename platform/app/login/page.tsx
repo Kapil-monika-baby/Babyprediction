@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import LoginForm from "../auth/login-form";
 import { supabase } from "../../lib/supabase-browser";
 
+function destinationAfterLogin() {
+  const requested = new URLSearchParams(window.location.search).get("next");
+  // Only allow local app paths; never redirect to an external URL.
+  if (!requested || !requested.startsWith('/')) return '/dashboard';
+  try {
+    const destination = new URL(requested, window.location.origin);
+    // URL parsing also normalizes backslashes; compare origins to block open redirects.
+    if (destination.origin !== window.location.origin) return '/dashboard';
+    return destination.pathname + destination.search + destination.hash;
+  } catch {
+    return '/dashboard';
+  }
+}
+
 export default function LoginPage() {
   const [ready, setReady] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -18,7 +32,7 @@ export default function LoginPage() {
       if (session) {
         redirectStarted = true;
         setRedirecting(true);
-        window.location.replace("/dashboard");
+        window.location.replace(destinationAfterLogin());
         return;
       }
       setReady(true);
@@ -54,7 +68,7 @@ export default function LoginPage() {
           <h1 className="mt-2 text-3xl font-bold">Log in to your baby game</h1>
           <p className="mt-3 text-slate-600">Use your parent account to manage games and see predictions.</p>
           <LoginForm />
-          <p className="mt-6 text-center text-sm text-slate-500">New here? <a href="/signup" className="font-semibold text-slate-900">Create an account</a></p>
+          <p className="mt-6 text-center text-sm text-slate-500">New here? <a href={"/signup?next=" + encodeURIComponent(destinationAfterLogin())} className="font-semibold text-slate-900">Create an account</a></p>
         </div>
       </div>
     </main>
