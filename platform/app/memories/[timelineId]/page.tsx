@@ -42,7 +42,11 @@ export default function MemoryTimelinePage() {
     if (!user) { window.location.replace('/login?next=' + encodeURIComponent('/memories/' + timelineId)); return; }
     setCurrentUser(user.id);
     const { data: timelineData, error: timelineError } = await supabase.from('memory_timelines').select('id,title,owner_id').eq('id', timelineId).single();
-    if (timelineError || !timelineData) {
+    // Do not treat a readable timeline row as proof of authorization. Until
+    // an accepted, email-bound membership is verified here, only its owner may
+    // open the timeline. This also prevents a non-owner from seeing the form
+    // during a successful-but-unauthorized timeline lookup.
+    if (timelineError || !timelineData || timelineData.owner_id !== user.id) {
       setTimeline(null); setItems([]); setMedia({}); setAccessDenied(true);
       setError('This timeline is unavailable, or you do not have permission to view it.');
       setLoading(false); return;
