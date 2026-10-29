@@ -20,6 +20,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The production build prerenders pages that import the browser client.
+    # CI only needs syntactically valid public config; it must never connect to
+    # a real Supabase project or require production secrets.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder
     defaults:
       run:
         working-directory: platform
