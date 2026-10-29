@@ -42,11 +42,13 @@ export default function MemoryTimelinePage() {
     if (!user) { window.location.replace('/login?next=' + encodeURIComponent('/memories/' + timelineId)); return; }
     setCurrentUser(user.id);
     const { data: timelineData, error: timelineError } = await supabase.from('memory_timelines').select('id,title,owner_id').eq('id', timelineId).single();
-    // Do not treat a readable timeline row as proof of authorization. Until
-    // an accepted, email-bound membership is verified here, only its owner may
-    // open the timeline. This also prevents a non-owner from seeing the form
-    // during a successful-but-unauthorized timeline lookup.
-    if (timelineError || !timelineData || timelineData.owner_id !== user.id) {
+    // A readable timeline row alone is not proof of authorization. Check the
+    // database's owner-or-accepted-member helper before rendering any private
+    // content or controls. Pending/revoked invitations do not grant access.
+    const { data: isMember, error: membershipError } = timelineData
+      ? await supabase.rpc('is_memory_timeline_member', { p_timeline_id: timelineId })
+      : { data: false, error: null };
+    if (timelineError || !timelineData || membershipError || isMember !== true) {
       setTimeline(null); setItems([]); setMedia({}); setAccessDenied(true);
       setError('This timeline is unavailable, or you do not have permission to view it.');
       setLoading(false); return;
