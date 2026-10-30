@@ -87,7 +87,7 @@ export default function MemoriesPage() {
           <label htmlFor="timeline-title" className="mt-5 block text-sm font-bold">{t('timelineName')}</label>
           <input id="timeline-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={120} required className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100" />
           {babies.length > 0 && <><label htmlFor="timeline-baby" className="mt-4 block text-sm font-bold">For a child (optional)</label><select id="timeline-baby" value={babyId} onChange={e => setBabyId(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3"><option value="">No child linked yet</option>{babies.map(b => <option key={b.id} value={b.id}>{b.nickname || [b.parent_one_name, b.parent_two_name].filter(Boolean).join(' & ') || 'My child'}</option>)}</select></>}
-          <button disabled={saving || loading} className="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-700 disabled:opacity-50">{saving ? '{t('creating')}' : '{t('createPrivateTimeline')}'}</button>
+          <button disabled={saving || loading} className="mt-5 w-full rounded-xl bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-700 disabled:opacity-50">{saving ? t('creating') : t('createPrivateTimeline')}</button>
           <p className="mt-3 text-xs leading-5 text-slate-500">Family invitations are created from an individual timeline. Invitees must verify their email and sign in with the invited address before joining.</p>
         </form>
         <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-rose-100 sm:p-7">
