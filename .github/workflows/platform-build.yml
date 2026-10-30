@@ -1,6 +1,10 @@
 name: Baby Prediction Build
 
 on:
+  pull_request:
+    paths:
+      - 'platform/**'
+      - '.github/workflows/platform-build.yml'
   push:
     branches:
       - platform-foundation
@@ -12,6 +16,10 @@ jobs:
     defaults:
       run:
         working-directory: platform
+    env:
+      # Build-only placeholders; never use these for deployed environments.
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

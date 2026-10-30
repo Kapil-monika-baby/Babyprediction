@@ -42,7 +42,13 @@ export default function MemoryTimelinePage() {
     if (!user) { window.location.replace('/login?next=' + encodeURIComponent('/memories/' + timelineId)); return; }
     setCurrentUser(user.id);
     const { data: timelineData, error: timelineError } = await supabase.from('memory_timelines').select('id,title,owner_id').eq('id', timelineId).single();
-    if (timelineError || !timelineData) {
+    // A readable timeline row alone is not proof of authorization. Check the
+    // database's owner-or-accepted-member helper before rendering any private
+    // content or controls. Pending/revoked invitations do not grant access.
+    const { data: isMember, error: membershipError } = timelineData
+      ? await supabase.rpc('is_memory_timeline_member', { p_timeline_id: timelineId })
+      : { data: false, error: null };
+    if (timelineError || !timelineData || membershipError || isMember !== true) {
       setTimeline(null); setItems([]); setMedia({}); setAccessDenied(true);
       setError('This timeline is unavailable, or you do not have permission to view it.');
       setLoading(false); return;
