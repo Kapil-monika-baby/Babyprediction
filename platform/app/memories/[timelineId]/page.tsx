@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase-browser';
-import { useMemoryLanguage } from '../memory-language';
+import { MEMORY_LANGUAGES, useMemoryLanguage } from '../memory-language';
 
 type Timeline = { id: string; title: string; owner_id: string };
 type Memory = { id: string; kind: string; caption: string; occurred_on: string; milestone_type: string | null; created_at: string; created_by: string };
@@ -208,7 +208,7 @@ export default function MemoryTimelinePage() {
 
   if (accessDenied) {
     return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-12"><div className="mx-auto max-w-4xl">
-      <div className="flex items-center justify-between gap-3"><Link href="/memories" className="text-sm font-semibold text-slate-500 hover:text-slate-800">{t('allTimelines')}</Link><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as 'en' | 'hi')} className="rounded-lg border border-slate-200 bg-white px-2 py-2"><option value="en">{t('english')}</option><option value="hi">{t('hindi')}</option></select></label></div>
+      <div className="flex items-center justify-between gap-3"><Link href="/memories" className="text-sm font-semibold text-slate-500 hover:text-slate-800">{t('allTimelines')}</Link><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as (typeof MEMORY_LANGUAGES)[number]['code'])} className="rounded-lg border border-slate-200 bg-white px-2 py-2">{MEMORY_LANGUAGES.map(item => <option key={item.code} value={item.code}>{item.nativeName}</option>)}</select></label></div>
       <header className="mt-6 rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">{t('familyStory')}</p><h1 className="mt-3 text-3xl font-black sm:text-4xl">{t('memories')}</h1><p className="mt-3 max-w-2xl leading-7 text-slate-700">{t('privateIntro')}</p></header>
       <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error || 'This timeline is unavailable, or you do not have permission to view it.'}</div>
     </div></main>;
