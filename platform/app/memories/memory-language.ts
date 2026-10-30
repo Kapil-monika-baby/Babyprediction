@@ -20,7 +20,7 @@ const messages: Record<MemoryLanguage, Record<string, string>> = {
     copyGuestLink: 'Copy guest link', revokeAccess: 'Revoke access', deleteMemory: 'Delete memory',
     shareNote: 'Guests can view this item only. The rest of your timeline stays private. Link expires after 30 days.',
     privateFooter: 'This timeline is private. Guest links only show memories you choose to share.',
-    language: 'Language', english: 'English', hindi: 'हिन्दी',
+    language: 'Language', english: 'English', hindi: 'हिन्दी', parentDashboard: '← Parent dashboard', memoriesHeadline: 'Memories that grow with them.', memoriesIntro: 'Keep the little moments, milestones and stories together in one private family timeline. Your memories are private by default.', startTimeline: 'Start a timeline', startTimelineDescription: 'Create a space for photos, stories and special firsts. Only you can manage its privacy and family access.', timelineName: 'Timeline name', createPrivateTimeline: 'Create private timeline', creating: 'Creating…', yourTimelines: 'Your timelines', loadingTimelines: 'Loading your private timelines…', firstStory: 'Your story starts here', firstStoryDescription: 'Create your first timeline to begin collecting the moments you want to remember.', privateByDefault: 'Private by default. No public child profiles. You control what you keep and share.',
   },
   hi: {
     allTimelines: '← सभी टाइमलाइन', familyStory: 'आपकी परिवार की कहानी', memories: 'यादें',
@@ -37,7 +37,7 @@ const messages: Record<MemoryLanguage, Record<string, string>> = {
     copyGuestLink: 'गेस्ट लिंक कॉपी करें', revokeAccess: 'पहुँच रद्द करें', deleteMemory: 'याद हटाएँ',
     shareNote: 'मेहमान केवल इसी याद को देख सकते हैं। आपकी बाकी टाइमलाइन निजी रहती है। लिंक 30 दिनों बाद समाप्त हो जाता है।',
     privateFooter: 'यह टाइमलाइन निजी है। गेस्ट लिंक केवल वही यादें दिखाते हैं जिन्हें आप साझा करते हैं।',
-    language: 'भाषा', english: 'English', hindi: 'हिन्दी',
+    language: 'भाषा', english: 'English', hindi: 'हिन्दी', parentDashboard: '← पैरेंट डैशबोर्ड', memoriesHeadline: 'उनके साथ बढ़ती यादें।', memoriesIntro: 'छोटे-छोटे पल, खास पड़ाव और कहानियाँ एक निजी पारिवारिक टाइमलाइन में सहेजें। आपकी यादें डिफ़ॉल्ट रूप से निजी रहती हैं।', startTimeline: 'टाइमलाइन शुरू करें', startTimelineDescription: 'फोटो, कहानियों और पहली उपलब्धियों के लिए जगह बनाएँ। इसकी गोपनीयता और परिवार की पहुँच केवल आप नियंत्रित करते हैं।', timelineName: 'टाइमलाइन का नाम', createPrivateTimeline: 'निजी टाइमलाइन बनाएँ', creating: 'बनाई जा रही है…', yourTimelines: 'आपकी टाइमलाइन', loadingTimelines: 'आपकी निजी टाइमलाइन लोड हो रही हैं…', firstStory: 'आपकी कहानी यहाँ शुरू होती है', firstStoryDescription: 'जिन पलों को आप याद रखना चाहते हैं उन्हें सहेजने के लिए पहली टाइमलाइन बनाएँ।', privateByDefault: 'डिफ़ॉल्ट रूप से निजी। बच्चों की कोई सार्वजनिक प्रोफ़ाइल नहीं। आप तय करते हैं कि क्या सहेजना और साझा करना है।',
   },
 };
 
