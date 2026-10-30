@@ -28,4 +28,5 @@ jobs:
           cache: npm
           cache-dependency-path: platform/package.json
       - run: npm install
+      - run: npx tsc --noEmit
       - run: npm run build
