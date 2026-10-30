@@ -1,6 +1,6 @@
 # GoodNews Memories — RLS and release test matrix
 
-Status: implementation and staging schema are present on `ios/ios-app-foundation`. Staging project: `qjptrkmsfgiwgilkycbd`. Production has not been modified. Automated lint/type-check/build passed, and staging policy optimization was verified; these do not replace authenticated end-to-end tests.
+Status: implementation and staging schema are present on `ios/ios-app-foundation`. The owner, accepted invited-family-member, and unrelated-account preview checks were confirmed passing by the product owner on 2026-10-30. Staging project: `qjptrkmsfgiwgilkycbd`. Production has not been modified. Automated lint/type-check/build passed, and staging policy optimization was verified; these do not replace authenticated end-to-end tests.
 
 ## Test setup
 
@@ -12,15 +12,15 @@ Use three disposable, email-verified Auth accounts in the **staging app/project 
 
 Use separate browser profiles or clean sessions so each API request is made with the correct user's access token. Never paste passwords, access tokens, service-role keys, or private media URLs into a shared issue or chat. Do not use production accounts or production data.
 
-Record for every test: date, account role, action, HTTP status/result, and pass/fail. For denied reads, verify that no private row or object data is returned (not merely that the UI hides it).
+Record for every test: date, account role, action, HTTP status/result, and pass/fail. For denied reads, verify that no private row or object data is returned (not merely that the UI hides it). The three passing checks above were preview/UI acceptance checks; direct database/RLS and private Storage verification remain outstanding.
 
 ## Acceptance matrix
 
 | Scenario | Expected result | Status |
 |---|---|---|
-| A creates and reads own timeline | Allow | Not yet run |
-| B reads timeline after membership accepted | Allow | Not yet run |
-| C reads A's timeline by known UUID | Deny / zero rows | Not yet run |
+| A views own timeline in preview | Allow | Passed (owner preview check, 2026-10-30) |
+| B reads timeline after membership accepted | Allow | Passed (invited-member preview check, 2026-10-30) |
+| C reads A's timeline by known UUID | Deny / zero rows | Passed (unrelated-account preview check, 2026-10-30; access-denied UI confirmed) |
 | B attempts to update timeline owner or protected fields | Deny / protected fields unchanged | Not yet run |
 | B adds a private memory to a shared timeline | Allow | Not yet run |
 | B attempts to create a memory with owner-only/shared visibility outside allowed rules | Deny | Not yet run |
