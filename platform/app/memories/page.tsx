@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase-browser';
-import { useMemoryLanguage } from './memory-language';
+import { MEMORY_LANGUAGES, useMemoryLanguage } from './memory-language';
 
 type Timeline = { id: string; title: string; created_at: string; baby_id: string | null };
 type Baby = { id: string; nickname: string | null; parent_one_name: string | null; parent_two_name: string | null };
@@ -72,7 +72,7 @@ export default function MemoriesPage() {
 
   return <main className="min-h-screen bg-[#fffaf7] px-4 py-8 text-slate-900 sm:px-6 sm:py-12">
     <div className="mx-auto max-w-4xl">
-      <div className="flex items-center justify-between gap-3"><Link href="/dashboard" className="text-sm font-semibold text-slate-500 hover:text-slate-800">{t('parentDashboard')}</Link><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as 'en' | 'hi')} className="rounded-lg border border-slate-200 bg-white px-2 py-2"><option value="en">{t('english')}</option><option value="hi">{t('hindi')}</option></select></label></div>
+      <div className="flex items-center justify-between gap-3"><Link href="/dashboard" className="text-sm font-semibold text-slate-500 hover:text-slate-800">{t('parentDashboard')}</Link><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as (typeof MEMORY_LANGUAGES)[number]['code'])} className="rounded-lg border border-slate-200 bg-white px-2 py-2">{MEMORY_LANGUAGES.map(item => <option key={item.code} value={item.code}>{item.nativeName}</option>)}</select></label></div>
       <header className="mt-6 overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 p-7 sm:p-10">
         <p className="text-xs font-bold uppercase tracking-[.22em] text-rose-700">GoodNews Baby · Family space</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">{t('memoriesHeadline')}</h1>
