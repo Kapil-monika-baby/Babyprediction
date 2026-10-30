@@ -28,5 +28,19 @@ jobs:
           cache: npm
           cache-dependency-path: platform/package.json
       - run: npm install
-      - run: npx tsc --noEmit
+      - name: Type-check the Next.js application
+        run: npx tsc --noEmit
+      - name: Set up Deno for Supabase Edge Functions
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Supabase Edge Functions
+        run: >-
+          deno check --node-modules-dir=auto
+          supabase/functions/delete-account/index.ts
+          supabase/functions/create-memory-invitation/index.ts
+          supabase/functions/accept-memory-invitation/index.ts
+          supabase/functions/create-memory-share/index.ts
+          supabase/functions/resolve-memory-share/index.ts
+          supabase/functions/revoke-memory-share/index.ts
       - run: npm run build
