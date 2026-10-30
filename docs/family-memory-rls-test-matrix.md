@@ -1,68 +1,63 @@
 # GoodNews Memories — RLS and release test matrix
 
-Status: implementation and staging schema are present on `ios/ios-app-foundation`. The owner, accepted invited-family-member, and unrelated-account preview checks were confirmed passing by the product owner on 2026-10-30. Staging project: `qjptrkmsfgiwgilkycbd`. Production has not been modified. Automated lint/type-check/build passed, and staging policy optimization was verified; these do not replace authenticated end-to-end tests.
+Status: staging security migration `20261030085822_memory_private_visibility_and_grants` is applied to isolated staging project `qjptrkmsfgiwgilkycbd` and committed on PR #10's branch. The migration limits private memories/media to the owner and author, permits accepted contributors to see shared items, removes anon privileges, and revokes authenticated TRUNCATE/REFERENCES/TRIGGER. Production has not been modified.
 
 ## Test setup
 
-Use three disposable, email-verified Auth accounts in the **staging app/project only**:
+Three staging Auth identities were used only through isolated SQL transactions:
 
-- **A — owner:** creates a timeline and private memory/media.
-- **B — contributor:** invited by A, accepts the invitation using the invited email.
-- **C — unrelated:** has no membership or invitation.
+- **A — owner:** `47c3…`
+- **B — accepted contributor:** `7141…`
+- **C — unrelated account:** `fe31…`
 
-Use separate browser profiles or clean sessions so each API request is made with the correct user's access token. Never paste passwords, access tokens, service-role keys, or private media URLs into a shared issue or chat. Do not use production accounts or production data.
-
-Record for every test: date, account role, action, HTTP status/result, and pass/fail. For denied reads, verify that no private row or object data is returned (not merely that the UI hides it). The three passing checks above were preview/UI acceptance checks; direct database/RLS and private Storage verification remain outstanding.
+No passwords, access tokens, service-role keys, private media URLs, or memory captions were copied into this report. Temporary write tests were rolled back.
 
 ## Acceptance matrix
 
 | Scenario | Expected result | Status |
 |---|---|---|
-| A views own timeline in preview | Allow | Passed (owner preview check, 2026-10-30) |
-| B reads timeline after membership accepted | Allow | Passed (invited-member preview check, 2026-10-30) |
-| C reads A's timeline by known UUID | Deny / zero rows | Passed (unrelated-account preview check, 2026-10-30; access-denied UI confirmed) |
-| B attempts to update timeline owner or protected fields | Deny / protected fields unchanged | Not yet run |
-| B adds a private memory to a shared timeline | Allow | Not yet run |
-| B attempts to create a memory with owner-only/shared visibility outside allowed rules | Deny | Not yet run |
-| C reads memory by known UUID | Deny / zero rows | Not yet run |
-| B reads an authorized timeline media object | Allow | Not yet run |
-| C downloads a known object path from private `memory-media` bucket | Deny | Not yet run |
-| B deletes media uploaded by another contributor | Deny | Not yet run |
-| B deletes their own memory/media while still an accepted member | Allow, within policy | Not yet run |
-| A removes B from membership | Membership removed; subsequent B reads denied | Not yet run |
-| B tries to access the timeline after removal | Deny / zero rows and Storage denial | Not yet run |
-| C queries invitation/member tables | Deny / zero rows | Not yet run |
-| Invalid, expired, revoked, or already-used invitation token | Reject; no membership created | Not yet run |
-| Valid invitation token used by the matching verified email | Accept once; membership created | Not yet run |
-| Valid token used by a different or unverified email | Reject; no membership created | Not yet run |
-| Invitation token hash / raw token leakage through list/read APIs | No token material exposed | Not yet run |
-| Owner deletes a memory | Related rows follow intended FK behavior; Storage cleanup separately verified | Not yet run |
-| Account deletion succeeds | User's Memories rows, invitations/memberships and private objects are removed per retention policy | Not yet run |
-| Storage cleanup fails partway through account deletion | Deletion fails safely or reports a retryable state; no false success; retry is safe/idempotent | Not yet run |
-| Account deletion handles many objects / pagination | All eligible objects processed; no skipped pages | Not yet run |
-| Existing baby prediction game, guest submission, dashboard and results | No regression | Not yet run |
+| A views own timeline and private items | Allow | PASS — 1 timeline, 5 private items |
+| B reads timeline after accepted membership | Allow | PASS — 1 timeline |
+| C reads A's timeline by known UUID | Deny / zero rows | PASS — 0 rows |
+| B reads own private memories | Allow | PASS — 2 authored private items |
+| B reads A's private memories | Deny | PASS — 0 owner-authored private items exposed |
+| B reads A's memory after owner changes it to shared | Allow | PASS — temporary transaction exposed shared row and its media metadata/object |
+| B attempts to update timeline owner | Deny | PASS — 0 rows changed |
+| B attempts to change own private memory to shared | Deny | PASS — RLS rejected update |
+| B inserts own private memory | Allow | PASS — temporary insert succeeded, then rolled back |
+| B inserts a shared memory directly | Deny | PASS — RLS rejected insert |
+| C reads memory by known UUID | Deny / zero rows | PASS — 0 rows |
+| B reads A's private media metadata/object | Deny | PASS — 0 media rows / 0 Storage objects |
+| C reads private Storage object metadata | Deny | PASS — 0 Storage objects |
+| B deletes own memory while accepted | Allow | PASS — temporary delete affected 1 row, then rolled back |
+| B deletes A's memory | Deny | PASS — 0 rows deleted |
+| A removes B from membership | Membership removed | PASS — temporary removal changed B's helper to false and subsequent timeline/items/storage reads to zero; rolled back |
+| C queries invitation/member/share-link/media metadata | Deny / zero rows | PASS — all four counts zero |
+| Expired invitation token | Reject | PASS — P0002 |
+| Revoked invitation token | Reject | PASS — P0002 |
+| Already-used invitation token | Reject | PASS — P0002 |
+| Valid invitation used by matching verified email | Accept once | PASS — accepted once; replay returned P0002; transaction rolled back |
+| Valid token used by a different email | Reject | PASS — 42501 |
+| Unverified email invitation acceptance | Reject | NOT RUN — no disposable unverified staging account available |
+| Owner deletes memory | Related metadata cascades | PASS — memory deletion removed its memory_media row in a rolled-back transaction; Storage object removal is separate |
+| Anonymous role table access | Deny | PASS — no SELECT or TRUNCATE privileges on Memories tables |
+| Authenticated TRUNCATE/REFERENCES/TRIGGER | Deny | PASS — privileges absent on all six Memories tables |
+| Account deletion succeeds end-to-end | Rows and private objects removed | NOT RUN — no disposable account authorized for destructive deletion |
+| Storage cleanup failure / retry | Safe, idempotent retry | NOT RUN — needs a disposable account and controlled Storage failure |
+| Account deletion pagination at scale | No skipped pages | NOT RUN — code paginates in 500-row pages, not load-tested |
+| Existing baby prediction game regression | No regression | NOT RUN on this latest branch — platform package has no test script or E2E suite; build CI is running |
 
-## Run order
+## Security findings and remediation
 
-1. Create A, B and C in staging; verify emails for A and B.
-2. As A, create a timeline and private memory; record IDs and a test-only media object path.
-3. Invite B. Verify the invited address, expiry, and one-time acceptance behavior.
-4. Run owner/member/unrelated-user database access tests with each account's own session.
-5. Run Storage download/delete checks using the private bucket; do not make the bucket public to simplify testing.
-6. Test membership removal and verify both database and Storage access are denied afterward.
-7. Test invalid, expired, revoked, mismatched-email and replayed invitation tokens.
-8. Test account deletion with a small account first, then a disposable account with enough test objects to exercise pagination. Simulate a Storage removal failure only in staging and confirm retry behavior.
-9. Run existing game regression tests.
-10. Attach sanitized results (no credentials, tokens, private media URLs or personal data) and update each status above.
-
-## Known advisor findings
-
-- The Memories `auth_rls_initplan` performance warnings were removed by the staging policy optimization and verified in the staging policy catalog.
-- Two security-advisor warnings remain for callable SECURITY DEFINER functions: `public.accept_memory_invitation(text)` and `public.is_admin()`. The former is part of the invitation RPC flow; the latter is used by existing authorization policies. Do not revoke either blindly. Review function definitions, grants, dependent policies and the authorization tests before release.
-- Other staging advisor findings include multiple-permissive-policy warnings on existing prediction/game tables and unused-index notices on the newly provisioned staging database.
+- **Fixed on staging and PR #10 branch:** contributors previously saw all private items/media on a shared timeline. The updated policies now allow the owner to see all items, the author to see their own private items, and accepted members to see shared items only.
+- **Fixed on staging and PR #10 branch:** `anon` had broad table privileges and both `anon` and `authenticated` had TRUNCATE. Anonymous access was revoked; authenticated users retain only SELECT/INSERT/UPDATE/DELETE, with RLS still authoritative.
+- The `memory-media` bucket remains private with a 50 MB limit and the configured image/video MIME allowlist.
+- Supabase security advisor still reports callable SECURITY DEFINER functions: `accept_memory_invitation`, `create_memory_timeline`, `is_memory_timeline_member`, `is_memory_timeline_owner`, and existing `is_admin`. These have intentional authenticated/policy call paths; do not revoke them blindly. Review their definitions and grants before production approval.
+- Supabase Auth leaked-password protection is disabled; this is a project-level warning, not changed as part of this PR.
+- Performance advisor still reports existing multiple-permissive-policy warnings on Baby Prediction tables and unused indexes on the fresh staging database.
 
 ## Release gate
 
-**Do not release to production yet.** Authenticated acceptance tests above are not recorded as passed. Review the remaining SECURITY DEFINER findings, confirm account-deletion failure/retry semantics, and complete the matrix before production approval. Production schema, data, functions and app deployment must remain untouched until explicitly approved.
+**Do not release to production yet.** The confirmed private-memory and privilege issues are fixed in staging and committed to PR #10, but end-to-end account deletion failure/retry, unverified-email acceptance, direct Storage delete/download API checks, and latest-branch game regression remain unverified. The account-deletion function also needs a session-revocation/retry design review: Supabase documents that deleting a user does not immediately invalidate already-issued JWT access tokens. Production schema, data, functions and app deployment remain untouched.
 
 Related staging report: [family-memory-staging-status-2026-10-27.md](family-memory-staging-status-2026-10-27.md)
