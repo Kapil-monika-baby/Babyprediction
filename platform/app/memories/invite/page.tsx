@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase-browser';
-import { useMemoryLanguage } from '../memory-language';
+import { MEMORY_LANGUAGES, useMemoryLanguage } from '../memory-language';
 
 export default function AcceptMemoryInvitationPage() {
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function AcceptMemoryInvitationPage() {
   return <main className="flex min-h-screen items-center justify-center bg-[#fffaf7] px-4 py-10 text-slate-900">
     <section className="w-full max-w-xl rounded-[2rem] bg-white p-7 shadow-sm ring-1 ring-rose-100 sm:p-10">
       <div className="text-4xl" aria-hidden="true">💛</div>
-      <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold uppercase tracking-[.2em] text-rose-700">GoodNews Baby Memories</p><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as 'en' | 'hi')} className="rounded-lg border border-slate-200 bg-white px-2 py-2"><option value="en">{t('english')}</option><option value="hi">{t('hindi')}</option></select></label></div>
+      <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold uppercase tracking-[.2em] text-rose-700">GoodNews Baby Memories</p><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><span>{t('language')}</span><select aria-label={t('language')} value={language} onChange={e => setLanguage(e.target.value as (typeof MEMORY_LANGUAGES)[number]['code'])} className="rounded-lg border border-slate-200 bg-white px-2 py-2">{MEMORY_LANGUAGES.map(item => <option key={item.code} value={item.code}>{item.nativeName}</option>)}</select></label></div>
       <h1 className="mt-2 text-3xl font-black">{t('invitationTitle')}</h1>
       <p className="mt-3 leading-7 text-slate-600">{t('invitationIntro')}</p>
       {error && <div role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
