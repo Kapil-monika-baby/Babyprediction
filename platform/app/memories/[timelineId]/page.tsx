@@ -32,6 +32,8 @@ export default function MemoryTimelinePage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLink, setInviteLink] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [sharingMemory, setSharingMemory] = useState('');
+  const [shareLinks, setShareLinks] = useState<Record<string, { id: string; url: string }>>({});
 
   const load = useCallback(async () => {
     // Clear prior timeline state before checking access. This prevents controls
@@ -143,6 +145,44 @@ export default function MemoryTimelinePage() {
     }
   }
 
+  async function createMemoryShare(memory: Memory) {
+    if (timeline?.owner_id !== currentUser || sharingMemory) return;
+    setSharingMemory(memory.id); setError(''); setNotice('');
+    const { data, error: shareError } = await supabase.functions.invoke('create-memory-share', { body: { memoryId: memory.id } });
+    if (shareError || !data?.token || !data?.shareId) {
+      setError(data?.error || shareError?.message || 'Could not create a private share link.');
+      setSharingMemory(''); return;
+    }
+    const url = window.location.origin + '/memories/share?token=' + encodeURIComponent(data.token);
+    setShareLinks(previous => ({ ...previous, [memory.id]: { id: data.shareId, url } }));
+    setNotice('A private link for this one memory is ready. It expires in 30 days.');
+    setSharingMemory('');
+  }
+
+  async function copyMemoryShare(memoryId: string) {
+    const link = shareLinks[memoryId];
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link.url);
+      setNotice('Private memory link copied. Share it only with the intended guest.');
+    } catch {
+      setError('Copy was blocked. Select the link and copy it manually.');
+    }
+  }
+
+  async function revokeMemoryShare(memoryId: string) {
+    const link = shareLinks[memoryId];
+    if (!link) return;
+    if (!window.confirm('Revoke this guest link? The guest will no longer be able to open this memory.')) return;
+    const { data, error: revokeError } = await supabase.functions.invoke('revoke-memory-share', { body: { shareId: link.id } });
+    if (revokeError || !data?.success) {
+      setError(data?.error || revokeError?.message || 'Could not revoke this link.');
+      return;
+    }
+    setShareLinks(previous => { const next = { ...previous }; delete next[memoryId]; return next; });
+    setNotice('Guest access to this memory has been revoked.');
+  }
+
   async function deleteMemory(memory: Memory) {
     if (timeline?.owner_id !== currentUser && memory.created_by !== currentUser) return;
     if (!window.confirm('Delete this memory? This cannot be undone.')) return;
@@ -200,6 +240,14 @@ export default function MemoryTimelinePage() {
         {media[item.id] && (item.kind === 'video' ? <video controls preload="metadata" src={media[item.id]} className="max-h-72 w-full bg-slate-100 object-contain"/> : <img src={media[item.id]} alt="Family memory" className="max-h-72 w-full bg-rose-50 object-cover"/> )}
         <div className="p-5"><div className="flex items-center justify-between gap-2"><span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold capitalize text-rose-700">{item.kind === 'milestone' ? item.milestone_type || 'Milestone' : item.kind}</span><time className="text-xs text-slate-500">{new Date(item.occurred_on + 'T12:00:00').toLocaleDateString()}</time></div>
         {item.caption && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">{item.caption}</p>}
+        {timeline?.owner_id === currentUser && <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 p-3">
+          <p className="text-xs font-bold text-amber-900">Share only this memory</p>
+          {shareLinks[item.id] ? <>
+            <input aria-label="Private guest link" readOnly value={shareLinks[item.id].url} onFocus={e => e.currentTarget.select()} className="mt-2 w-full rounded-lg border border-amber-200 bg-white px-2 py-2 text-xs"/>
+            <div className="mt-2 flex flex-wrap gap-3"><button onClick={() => void copyMemoryShare(item.id)} className="text-xs font-bold text-slate-800 underline">Copy guest link</button><button onClick={() => void revokeMemoryShare(item.id)} className="text-xs font-bold text-red-700 underline">Revoke access</button></div>
+          </> : <button disabled={sharingMemory === item.id} onClick={() => void createMemoryShare(item)} className="mt-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{sharingMemory === item.id ? 'Creating link…' : 'Create private guest link'}</button>}
+          <p className="mt-2 text-[11px] leading-4 text-slate-600">Guests can view this item only. The rest of your timeline stays private. Link expires after 30 days.</p>
+        </div>}
         {(timeline?.owner_id === currentUser || item.created_by === currentUser) && <button onClick={() => void deleteMemory(item)} className="mt-4 text-sm font-bold text-red-600 hover:text-red-800">Delete memory</button>}</div></article>)}</div>}
     </section>
     <p className="mt-8 text-center text-xs leading-5 text-slate-500">This timeline is private. Family access requires an email-bound invitation; public share links remain disabled.</p>
