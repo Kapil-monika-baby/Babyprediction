@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'platform/**'
+      - 'package.json'
       - '.github/workflows/platform-build.yml'
   push:
     branches:
@@ -11,8 +12,64 @@ on:
   workflow_dispatch:
 
 jobs:
+  lockfiles:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Generate reproducible lockfiles without running package scripts
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit
+          npm install --package-lock-only --ignore-scripts --no-audit --prefix platform
+      - name: Report exact npm advisories
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > /tmp/root-audit.json
+          npm audit --json --prefix platform > /tmp/platform-audit.json
+          set -e
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const [label, file] of [['root', '/tmp/root-audit.json'], ['platform', '/tmp/platform-audit.json']]) {
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            console.log(JSON.stringify({
+              project: label,
+              totals: report.metadata?.vulnerabilities ?? {},
+              advisories: Object.entries(report.vulnerabilities ?? {}).map(([name, item]) => ({
+                name,
+                severity: item.severity,
+                direct: item.isDirect,
+                range: item.range,
+                fixAvailable: item.fixAvailable,
+                via: item.via.map(v => typeof v === 'string' ? v : {
+                  title: v.title, url: v.url, range: v.range, severity: v.severity
+                })
+              }))
+            }, null, 2));
+          }
+          NODE
+      - name: Commit generated lockfiles to the PR branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json platform/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfiles already current; no commit needed."
+          else
+            git commit -m "chore: add reproducible npm lockfiles"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
   build:
     runs-on: ubuntu-latest
+    needs: [lockfiles]
     defaults:
       run:
         working-directory: platform
@@ -29,7 +86,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: platform/package.json
+          cache-dependency-path: platform/package-lock.json
       - run: deno test supabase/functions/delete-account/account-deletion-utils.test.ts
       - run: npm install
       - run: deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts
