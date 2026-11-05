@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "if [ -d platform ]; then cd platform && npm install && npm run build; else next build; fi",
+    "build": "if [ -d platform ]; then cd platform && npm ci && npm run build; else next build; fi",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "16.3.8",
+    "next": "16.4.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "typescript": "5.9.2"
@@ -19,6 +19,6 @@
     "@types/react": "19.2.0",
     "@types/react-dom": "19.2.0",
     "eslint": "9.35.0",
-    "eslint-config-next": "16.3.8"
+    "eslint-config-next": "16.4.5"
   }
 }

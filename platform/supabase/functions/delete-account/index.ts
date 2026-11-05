@@ -1,6 +1,7 @@
 /// <reference lib="deno.ns" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { chunks, fetchAllRows, removeStoragePaths, storagePath } from "./account-deletion-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,57 +11,6 @@ const corsHeaders = {
 
 function missingMemorySchema(error: { code?: string } | null): boolean {
   return error?.code === "42P01" || error?.code === "PGRST205";
-}
-
-function storagePath(value: unknown): string | null {
-  if (typeof value !== "string" || !value.trim()) return null;
-  const input = value.trim();
-  const marker = "/storage/v1/object/public/game-images/";
-  const at = input.indexOf(marker);
-  if (at >= 0) return decodeURIComponent(input.slice(at + marker.length).split("?")[0]);
-  if (/^https?:\/\//i.test(input)) return null;
-  return input.replace(/^\/+/, "");
-}
-
-async function removeStoragePaths(
-  admin: Pick<ReturnType<typeof createClient>, "storage">,
-  bucket: string,
-  paths: string[],
-): Promise<void> {
-  // Keep each request bounded; retrying after a partial failure is safe because
-  // the database rows remain until every batch has completed successfully.
-  const batchSize = 100;
-  for (let index = 0; index < paths.length; index += batchSize) {
-    const batch = paths.slice(index, index + batchSize);
-    const { error } = await admin.storage.from(bucket).remove(batch);
-    if (error) throw error;
-  }
-}
-
-const PAGE_SIZE = 500;
-const ID_CHUNK_SIZE = 100;
-
-type QueryError = { code?: string; message?: string };
-
-async function fetchAllRows<T>(
-  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: QueryError | null }>,
-): Promise<{ data: T[] | null; error: QueryError | null }> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1);
-    if (error) return { data: null, error };
-    const page = data ?? [];
-    rows.push(...page);
-    if (page.length < PAGE_SIZE) return { data: rows, error: null };
-  }
-}
-
-function chunks<T>(values: T[], size = ID_CHUNK_SIZE): T[][] {
-  const result: T[][] = [];
-  for (let index = 0; index < values.length; index += size) {
-    result.push(values.slice(index, index + size));
-  }
-  return result;
 }
 
 Deno.serve(async (req: Request) => {
@@ -190,7 +140,13 @@ Deno.serve(async (req: Request) => {
     const { error: profileError } = await admin.from("profiles").delete().eq("id", user.id);
     if (profileError) throw profileError;
 
-    const { error: authDeleteError } = await admin.auth.admin.deleteUser(user.id, true);
+    // Revoke refresh tokens only after all retryable cleanup has succeeded.
+    // Access JWTs already issued remain valid until exp; ownership checks remain required.
+    const { error: signOutError } = await admin.auth.admin.signOut(token, "global");
+    if (signOutError) throw signOutError;
+
+    // Omit shouldSoftDelete: this flow promises permanent account deletion.
+    const { error: authDeleteError } = await admin.auth.admin.deleteUser(user.id);
     if (authDeleteError) throw authDeleteError;
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
