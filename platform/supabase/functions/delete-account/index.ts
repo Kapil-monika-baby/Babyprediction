@@ -91,6 +91,12 @@ Deno.serve(async (req: Request) => {
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
   try {
+    // Revoke every refresh-token session before destructive cleanup. Existing access
+    // JWTs remain valid until exp, so sensitive endpoints must still enforce ownership
+    // and short token lifetimes; revocation prevents future refreshes.
+    const { error: signOutError } = await admin.auth.admin.signOut(token, "global");
+    if (signOutError) throw signOutError;
+
     // Page every query: PostgREST applies a default row cap, so a single select
     // can silently miss data and leave media behind during account deletion.
     const timelineResult = await fetchAllRows<{ id: string }>((from, to) =>
@@ -190,7 +196,8 @@ Deno.serve(async (req: Request) => {
     const { error: profileError } = await admin.from("profiles").delete().eq("id", user.id);
     if (profileError) throw profileError;
 
-    const { error: authDeleteError } = await admin.auth.admin.deleteUser(user.id, true);
+    // Omit shouldSoftDelete: this flow promises permanent account deletion.
+    const { error: authDeleteError } = await admin.auth.admin.deleteUser(user.id);
     if (authDeleteError) throw authDeleteError;
 
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
