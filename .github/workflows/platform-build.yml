@@ -31,6 +31,6 @@ jobs:
           cache: npm
           cache-dependency-path: platform/package.json
       - run: deno test supabase/functions/delete-account/account-deletion-utils.test.ts
-      - run: deno check supabase/functions/delete-account/index.ts
       - run: npm install
+      - run: deno check supabase/functions/delete-account/index.ts
       - run: npm run build
