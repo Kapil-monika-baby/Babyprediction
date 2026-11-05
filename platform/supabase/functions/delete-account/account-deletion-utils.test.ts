@@ -1,3 +1,4 @@
+/// <reference lib="deno.ns" />
 import {
   chunks,
   fetchAllRows,
