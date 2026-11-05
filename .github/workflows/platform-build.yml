@@ -80,6 +80,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder-key
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -89,6 +91,6 @@ jobs:
           cache: npm
           cache-dependency-path: platform/package-lock.json
       - run: deno test supabase/functions/delete-account/account-deletion-utils.test.ts
-      - run: npm install
+      - run: npm ci
       - run: deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts
       - run: npm run build
