@@ -68,6 +68,7 @@ jobs:
           fi
 
   build:
+    if: always() && (needs.lockfiles.result == 'success' || needs.lockfiles.result == 'skipped')
     runs-on: ubuntu-latest
     needs: [lockfiles]
     defaults:
