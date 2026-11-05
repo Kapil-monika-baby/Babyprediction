@@ -22,10 +22,14 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder-key
     steps:
       - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: platform/package.json
+      - run: deno test supabase/functions/delete-account/account-deletion-utils.test.ts
       - run: npm install
       - run: npm run build
