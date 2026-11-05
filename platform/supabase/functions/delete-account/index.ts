@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
