@@ -2,6 +2,7 @@
 import {
   chunks,
   fetchAllRows,
+  removeOwnedStorageObjects,
   removeStoragePaths,
   storagePath,
 } from "./account-deletion-utils.ts";
