@@ -43,6 +43,26 @@ type StorageRemover = {
   };
 };
 
+export type OwnedStorageObject = { bucket_id: string; name: string };
+type StorageAdmin = StorageRemover & {
+  rpc(fn: string, args: Record<string, unknown>): PromiseLike<{ data: OwnedStorageObject[] | null; error: QueryError | null }>;
+};
+
+export async function removeOwnedStorageObjects(admin: StorageAdmin, userId: string): Promise<number> {
+  const result = await fetchAllRows<OwnedStorageObject>((from, to) =>
+    admin.rpc("list_user_storage_objects", { p_user_id: userId, p_limit: to - from + 1, p_offset: from }));
+  if (result.error) throw result.error;
+  const byBucket = new Map<string, string[]>();
+  for (const object of result.data ?? []) {
+    if (!object.bucket_id || !object.name) throw new Error("Storage ownership query returned an invalid object");
+    const names = byBucket.get(object.bucket_id) ?? [];
+    names.push(object.name);
+    byBucket.set(object.bucket_id, names);
+  }
+  for (const [bucket, names] of byBucket) await removeStoragePaths(admin, bucket, [...new Set(names)]);
+  return result.data?.length ?? 0;
+}
+
 export async function removeStoragePaths(
   admin: StorageRemover,
   bucket: string,

@@ -1,7 +1,7 @@
 /// <reference lib="deno.ns" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
-import { chunks, fetchAllRows, removeStoragePaths, storagePath } from "./account-deletion-utils.ts";
+import { chunks, fetchAllRows, removeOwnedStorageObjects, removeStoragePaths, storagePath } from "./account-deletion-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,6 +134,10 @@ Deno.serve(async (req: Request) => {
     if (paths.size) {
       await removeStoragePaths(admin, "game-images", [...paths]);
     }
+
+    // Sweep every Storage bucket for objects owned by this Auth user, including
+    // orphaned uploads not referenced by application rows. Delete through Storage API.
+    await removeOwnedStorageObjects(admin, user.id);
 
     // The profile's FK cascades through owned games, questions, results,
     // predictions and baby records. Never accept a user ID from the client.
