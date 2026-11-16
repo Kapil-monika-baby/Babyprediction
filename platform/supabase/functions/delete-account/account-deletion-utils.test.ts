@@ -67,21 +67,87 @@ Deno.test("removeStoragePaths batches requests and stops on failure", async () =
   }
 });
 
-
 Deno.test("removeOwnedStorageObjects sweeps all buckets and paginates", async () => {
-  const objects = Array.from({ length: 501 }, (_, i) => ({ bucket_id: i === 500 ? "game-images" : "memory-media", name: "user/" + i + ".jpg" }));
+  const objects = Array.from({ length: 501 }, (_, i) => ({
+    bucket_id: i === 500 ? "game-images" : "memory-media",
+    name: "user/" + i + ".jpg",
+  }));
   const rpcCalls: Array<{ p_limit: number; p_offset: number }> = [];
   const removals: Array<{ bucket: string; paths: string[] }> = [];
-  const admin = { rpc: async (_fn: string, args: Record<string, unknown>) => { const limit=Number(args.p_limit), offset=Number(args.p_offset); rpcCalls.push({p_limit:limit,p_offset:offset}); return {data:objects.slice(offset,offset+limit),error:null}; }, storage: {from:(bucket:string)=>({remove:async(paths:string[])=>{removals.push({bucket,paths});return {error:null};}})} };
-  const count=await removeOwnedStorageObjects(admin,"user-123");
-  if(count!==501) throw new Error("owned Storage object count is incorrect");
-  if(rpcCalls.length!==2||rpcCalls[0].p_offset!==0||rpcCalls[1].p_offset!==500) throw new Error("owned Storage objects were not paginated");
-  if(removals.length!==2||!removals.some(x=>x.bucket==="memory-media"&&x.paths.length===500)||!removals.some(x=>x.bucket==="game-images"&&x.paths.length===1)) throw new Error("owned objects were not removed from each bucket");
+  const admin = {
+    rpc: async (_fn: string, args: Record<string, unknown>) => {
+      const limit = Number(args.p_limit);
+      const offset = Number(args.p_offset);
+      rpcCalls.push({ p_limit: limit, p_offset: offset });
+      return { data: objects.slice(offset, offset + limit), error: null };
+    },
+    storage: {
+      from: (bucket: string) => ({
+        remove: async (paths: string[]) => {
+          removals.push({ bucket, paths });
+          return { error: null };
+        },
+      }),
+    },
+  };
+
+  const count = await removeOwnedStorageObjects(admin, "user-123");
+  if (count !== 501) throw new Error("owned Storage object count is incorrect");
+  if (
+    rpcCalls.length !== 2 ||
+    rpcCalls[0].p_offset !== 0 ||
+    rpcCalls[1].p_offset !== 500 ||
+    rpcCalls.some((call) => call.p_limit !== 500)
+  ) {
+    throw new Error("owned Storage objects were not paginated");
+  }
+
+  const memoryBatches = removals.filter((call) => call.bucket === "memory-media");
+  const gameImageBatches = removals.filter((call) => call.bucket === "game-images");
+  const removedMemoryPaths = memoryBatches.flatMap((call) => call.paths);
+  const removedGameImagePaths = gameImageBatches.flatMap((call) => call.paths);
+
+  if (
+    memoryBatches.length !== 5 ||
+    memoryBatches.some((call) => call.paths.length !== 100) ||
+    removedMemoryPaths.length !== 500 ||
+    new Set(removedMemoryPaths).size !== 500
+  ) {
+    throw new Error("memory-media objects were not removed exactly once in batches of 100");
+  }
+  if (
+    gameImageBatches.length !== 1 ||
+    gameImageBatches[0].paths.length !== 1 ||
+    removedGameImagePaths[0] !== "user/500.jpg"
+  ) {
+    throw new Error("game-images object was not removed exactly once");
+  }
+  if (removals.some((call) => call.paths.length > 100)) {
+    throw new Error("a Storage removal batch exceeded the API batch limit");
+  }
 });
 
 Deno.test("removeOwnedStorageObjects aborts before deletion when ownership query fails", async () => {
-  const failure={code:"XX000",message:"ownership lookup failed"}; let removeCalls=0;
-  const admin={rpc:async()=>({data:null,error:failure}),storage:{from:(_bucket:string)=>({remove:async(_paths:string[])=>{removeCalls+=1;return {error:null};}})}};
-  let caught:unknown; try {await removeOwnedStorageObjects(admin,"user-123");} catch(error){caught=error;}
-  if(caught!==failure||removeCalls!==0) throw new Error("ownership query failure did not safely abort cleanup");
+  const failure = { code: "XX000", message: "ownership lookup failed" };
+  let removeCalls = 0;
+  const admin = {
+    rpc: async () => ({ data: null, error: failure }),
+    storage: {
+      from: (_bucket: string) => ({
+        remove: async (_paths: string[]) => {
+          removeCalls += 1;
+          return { error: null };
+        },
+      }),
+    },
+  };
+  let caught: unknown;
+  try {
+    await removeOwnedStorageObjects(admin, "user-123");
+  } catch (error) {
+    caught = error;
+  }
+  if (caught !== failure || removeCalls !== 0) {
+    throw new Error("ownership query failure did not safely abort cleanup");
+  }
 });
